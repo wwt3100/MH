@@ -1,0 +1,9 @@
+[Oo]bjects/
+[Oo][Bb][Jj]/
+[Ll]istings/
+[Dd]ebug[Cc]onfig/
+[Jj]Link*.*
+*.uvguix.*
+*.uvoptx
+*.dbgconf
+*.[Tt][Mm][Pp]
