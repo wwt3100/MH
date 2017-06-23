@@ -1,5 +1,5 @@
 #include "sys.h"
-#include "delay.h"
+#include "SysTick.h"
 #include "usart.h"
 #include "rtc.h" 		    
 //Mini STM32开发板
@@ -38,7 +38,7 @@ u8 RTC_Init(void)
 		while (RCC_GetFlagStatus(RCC_FLAG_LSERDY) == RESET&&temp<250)	//检查指定的RCC标志位设置与否,等待低速晶振就绪
 			{
 			temp++;
-			delay_ms(10);
+			Delay_ms(10);
 			}
 		if(temp>=250)return 1;//初始化时钟失败,晶振有问题	    
 		RCC_RTCCLKConfig(RCC_RTCCLKSource_LSE);		//设置RTC时钟(RTCCLK),选择LSE作为RTC时钟    

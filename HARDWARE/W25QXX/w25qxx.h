@@ -15,7 +15,7 @@
 #define W25Q128	0XEF17
 
 extern u16 W25QXX_TYPE;					//∂®“ÂW25QXX–æ∆¨–Õ∫≈		   
-static __inline void W25QXX_CS(uint8_t lh)
+static __inline void W25QXX_CS(BitAction lh)
 {
     GPIO_WriteBit(GPIOG,GPIO_Pin_2,lh);
 }

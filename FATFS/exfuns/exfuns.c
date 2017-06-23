@@ -2,6 +2,9 @@
 #include "exfuns.h"
 #include "fattester.h"	
 #include "usart.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 
 #define FILE_MAX_TYPE_NUM		6	//最多FILE_MAX_TYPE_NUM个大类

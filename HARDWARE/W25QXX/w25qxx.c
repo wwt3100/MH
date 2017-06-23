@@ -24,8 +24,8 @@ void W25QXX_Init(void)
  	GPIO_SetBits(GPIOB,GPIO_Pin_12);
  
     W25QXX_CS(1);				//SPI FLASH不选中
-	SPI2_Init();		   	//初始化SPI
-	SPI2_SetSpeed(SPI_BaudRatePrescaler_2);//设置为18M时钟,高速模式
+	SPI1_Init();		   	//初始化SPI
+	//SPI2_SetSpeed(SPI_BaudRatePrescaler_2);//设置为18M时钟,高速模式
 	W25QXX_TYPE=W25QXX_ReadID();//读取FLASH ID.  
 
 }  

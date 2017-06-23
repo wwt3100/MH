@@ -8,29 +8,19 @@
 /*-----------------------------------------------------------------------*/
 #include "diskio.h"			/* FatFs lower layer API */
 #include "sdio_sdcard.h"
-#include "w25qxx.h"
-
-//////////////////////////////////////////////////////////////////////////////////	 
-//本程序只供学习使用，未经作者许可，不得用于其它任何用途
-//ALIENTEK战舰STM32开发板V3
-//FATFS底层(diskio) 驱动代码	   
-//正点原子@ALIENTEK
-//技术论坛:www.openedv.com
-//创建日期:2015/1/20
-//版本：V1.0
-//版权所有，盗版必究。
-//Copyright(C) 广州市星翼电子科技有限公司 2009-2019
-//All rights reserved									  
-////////////////////////////////////////////////////////////////////////////////// 
+//#include "w25qxx.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #define SD_CARD	 0  //SD卡,卷标为0
-#define EX_FLASH 1	//外部flash,卷标为1
+//#define EX_FLASH 1	//外部flash,卷标为1
 
-#define FLASH_SECTOR_SIZE 	512			  
+//#define FLASH_SECTOR_SIZE 	512			  
 //对于W25Q128
 //前12M字节给fatfs用,12M字节后,用于存放字库,字库占用3.09M.	剩余部分,给客户自己用	 			    
-u16	    FLASH_SECTOR_COUNT=2048*12;	//W25Q1218,前12M字节给FATFS占用
-#define FLASH_BLOCK_SIZE   	8     	//每个BLOCK有8个扇区
+//u16	    FLASH_SECTOR_COUNT=2048*12;	//W25Q1218,前12M字节给FATFS占用
+//#define FLASH_BLOCK_SIZE   	8     	//每个BLOCK有8个扇区
 
 
 //获得磁盘状态
@@ -51,10 +41,10 @@ DSTATUS disk_initialize (
 		case SD_CARD://SD卡
 			res=SD_Init();//SD卡初始化 
   			break;
-		case EX_FLASH://外部flash
-			W25QXX_Init();
-			FLASH_SECTOR_COUNT=2048*12;//W25Q1218,前12M字节给FATFS占用 
- 			break;
+//		case EX_FLASH://外部flash
+//			W25QXX_Init();
+//			FLASH_SECTOR_COUNT=2048*12;//W25Q1218,前12M字节给FATFS占用 
+// 			break;
 		default:
 			res=1; 
 	}		 
@@ -86,15 +76,15 @@ DRESULT disk_read (
 				//printf("sd rd error:%d\r\n",res);
 			}
 			break;
-		case EX_FLASH://外部flash
-			for(;count>0;count--)
-			{
-				W25QXX_Read(buff,sector*FLASH_SECTOR_SIZE,FLASH_SECTOR_SIZE);
-				sector++;
-				buff+=FLASH_SECTOR_SIZE;
-			}
-			res=0;
-			break;
+//		case EX_FLASH://外部flash
+//			for(;count>0;count--)
+//			{
+//				W25QXX_Read(buff,sector*FLASH_SECTOR_SIZE,FLASH_SECTOR_SIZE);
+//				sector++;
+//				buff+=FLASH_SECTOR_SIZE;
+//			}
+//			res=0;
+//			break;
 		default:
 			res=1; 
 	}
@@ -128,15 +118,15 @@ DRESULT disk_write (
 				//printf("sd wr error:%d\r\n",res);
 			}
 			break;
-		case EX_FLASH://外部flash
-			for(;count>0;count--)
-			{										    
-				W25QXX_Write((u8*)buff,sector*FLASH_SECTOR_SIZE,FLASH_SECTOR_SIZE);
-				sector++;
-				buff+=FLASH_SECTOR_SIZE;
-			}
-			res=0;
-			break;
+//		case EX_FLASH://外部flash
+//			for(;count>0;count--)
+//			{										    
+//				W25QXX_Write((u8*)buff,sector*FLASH_SECTOR_SIZE,FLASH_SECTOR_SIZE);
+//				sector++;
+//				buff+=FLASH_SECTOR_SIZE;
+//			}
+//			res=0;
+//			break;
 		default:
 			res=1; 
 	}
