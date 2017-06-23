@@ -7,3 +7,5 @@
 *.uvoptx
 *.dbgconf
 *.[Tt][Mm][Pp]
+*.scvd
+*.[Mm][Aa][Pp]
