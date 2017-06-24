@@ -102,7 +102,7 @@ u8 f_typetell(u8 *fname)
 //total:总容量	 （单位KB）
 //free:剩余容量	 （单位KB）
 //返回值:0,正常.其他,错误代码
-u8 exf_getfree(u8 *drv,u32 *total,u32 *free)
+u8 exf_getfree(char *drv,u32 *total,u32 *free)
 {
 	FATFS *fs1;
 	u8 res;

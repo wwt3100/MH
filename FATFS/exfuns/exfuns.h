@@ -49,7 +49,7 @@ extern u8 *fatbuf;//SD卡数据缓存区
  
 u8 exfuns_init(void);							//申请内存
 u8 f_typetell(u8 *fname);						//识别文件类型
-u8 exf_getfree(u8 *drv,u32 *total,u32 *free);	//得到磁盘总容量和剩余容量
+u8 exf_getfree(char *drv,u32 *total,u32 *free);	//得到磁盘总容量和剩余容量
 u32 exf_fdsize(u8 *fdname);						//得到文件夹大小
 u8* exf_get_src_dname(u8* dpfn);																		   
 u8 exf_copy(u8(*fcpymsg)(u8*pname,u8 pct,u8 mode),u8 *psrc,u8 *pdst,u32 totsize,u32 cpdsize,u8 fwmode);	   //文件复制

@@ -75,7 +75,7 @@ void PendSV_Handler(void)
 {
 }
  
-extern uint32_t g_tick_1ms;
+extern volatile uint32_t g_tick_1ms;
 void SysTick_Handler(void)
 {
 	g_tick_1ms++;

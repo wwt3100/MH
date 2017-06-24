@@ -4,16 +4,22 @@
 #include "led.h" 		 	  
 #include "usmart.h" 
 #include "sdio_sdcard.h"  
-#include "spi.h"    
+#include "SPI_Flash.h"    
 #include "ff.h"  
 #include "exfuns.h"    
 #include "SysTick.h"
 
-uint32_t g_tick_1ms;
 
- int main(void)
- {	 
- 	u32 total,free;
+//add 报警日志 保存 上传
+// 卡坏 上传 不格式化
+
+volatile uint32_t g_tick_1ms;
+
+volatile uint32_t LedTimer;
+
+int main(void)
+{	 
+    u32 total,free;
 	u8 t=0;	
 	u8 res=0;	    	    
     SysTick_Init();
@@ -26,16 +32,14 @@ uint32_t g_tick_1ms;
 	SD_Init();
  	exfuns_init();							//为fatfs相关变量申请内存				 
   	f_mount(fs[0],"0:",1); 					//挂载SD卡 												    
-	while(exf_getfree("0",&total,&free))	//得到SD卡的总容量和剩余容量
-	{
-		
-		Delay_ms(200);
-		Delay_ms(200);
-	}													  			    
+	exf_getfree("0",&total,&free);	//得到SD卡的总容量和剩余容量
+													  			    
 	while(1)
 	{
-		t++; 
-		Delay_ms(200);		 			   
+		LED3(0);
+		Delay_ms(500);	
+        LED3(1);   
+        Delay_ms(500);        
 	} 
 }
 

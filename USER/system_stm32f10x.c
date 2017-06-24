@@ -63,7 +63,7 @@
   */
 
 #include "stm32f10x.h"
-
+//#define HSE_VALUE 12000000
 /**
   * @}
   */
@@ -1053,7 +1053,7 @@ static void SetSysClockTo72(void)
     /*  PLL configuration: PLLCLK = HSE * 9 = 72 MHz */
     RCC->CFGR &= (uint32_t)((uint32_t)~(RCC_CFGR_PLLSRC | RCC_CFGR_PLLXTPRE |
                                         RCC_CFGR_PLLMULL));
-    RCC->CFGR |= (uint32_t)(RCC_CFGR_PLLSRC_HSE | RCC_CFGR_PLLMULL9);
+    RCC->CFGR |= (uint32_t)(RCC_CFGR_PLLSRC_HSE | RCC_CFGR_PLLMULL6);//RCC_CFGR_PLLMULL6 for 12M Hz  / RCC_CFGR_PLLMULL9 for 8M Hz
 #endif /* STM32F10X_CL */
 
     /* Enable PLL */

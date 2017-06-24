@@ -7,7 +7,7 @@
  * 库版本  ：ST3.0.0
  * 广西 张工
 **********************************************************************************/
-#include "spi.h"	 
+#include "SPI_Flash.h"	 
 #include "SysTick.h"
 //#include "stm32flash.h"
 //#include "Memory.h"
