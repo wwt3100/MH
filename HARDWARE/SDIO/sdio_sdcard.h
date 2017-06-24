@@ -369,6 +369,8 @@ void SD_DMA_Config(u32*mbuf,u32 bufsize,u32 dir);
 u8 SD_ReadDisk(u8*buf,u32 sector,u8 cnt); 	//读SD卡,fatfs/usb调用
 u8 SD_WriteDisk(u8*buf,u32 sector,u8 cnt);	//写SD卡,fatfs/usb调用
 
+//检测卡是否插入
+uint8_t SD_CardIsInserted(void);
 
 #endif 
 

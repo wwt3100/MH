@@ -58,12 +58,12 @@ SD_Error SD_Init(void)
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP; 		 //复用推挽输出
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;		 //IO口速度为50MHz
   GPIO_Init(GPIOD, &GPIO_InitStructure);					 //根据设定参数初始化PD2
-
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_7;	//PD7 上拉输入
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU; 		 //复用推挽输出
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;		 //IO口速度为50MHz
-  GPIO_Init(GPIOD, &GPIO_InitStructure);					 //根据设定参数初始化PD7
  
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_7;	//PC7 上拉输入
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU; 		 
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;		 //IO口速度为50MHz
+  GPIO_Init(GPIOC, &GPIO_InitStructure);	//检测脚
+  
  	//SDIO外设寄存器设置为默认值 			   	   
 	SDIO_DeInit();
  
@@ -99,6 +99,12 @@ SD_Error SD_Init(void)
  	}
 	return errorstatus;		 
 }
+
+uint8_t SD_CardIsInserted()
+{
+    return GPIO_ReadInputDataBit(GPIOC,GPIO_Pin_7)?0:1;
+}
+
 //SDIO时钟初始化设置
 //clkdiv:时钟分频系数
 //CK时钟=SDIOCLK/[clkdiv+2];(SDIOCLK时钟固定为48Mhz)

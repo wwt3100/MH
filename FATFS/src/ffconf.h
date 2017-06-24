@@ -42,7 +42,7 @@
 /  2: Enable with LF-CRLF conversion. */
 
 
-#define _USE_FIND		0
+#define _USE_FIND		1
 /* This option switches filtered directory read feature and related functions,
 /  f_findfirst() and f_findnext(). (0:Disable or 1:Enable) */
 
@@ -141,7 +141,7 @@
 / Drive/Volume Configurations
 /---------------------------------------------------------------------------*/
 
-#define _VOLUMES	2	//支持2个磁盘
+#define _VOLUMES	1	//支持2个磁盘
 /* Number of volumes (logical drives) to be used. */
 
 
