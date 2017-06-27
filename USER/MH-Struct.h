@@ -30,7 +30,10 @@ typedef struct GlobalConfig
     uint8_t PhoneNumber3[16];
     uint8_t PhoneNumber4[16];
     uint8_t PhoneNumber5[16];
-    uint8_t AlarmIntervalTime; //报警间隔时间
+    uint8_t AlarmIntervalTime; //报警间隔时间 延时报警?
+    uint16_t SamplingInterval;  //单位 秒 不少于30秒
+    uint16_t RecodeInterval;  //记录间隔 不少于60秒
+    uint16_t RetryInterval;  //采样重试时间间隔 单位0.1s
 }_GlobalConfig;
 
 typedef enum
@@ -60,6 +63,10 @@ typedef struct DeviceData
     int32_t Data3;
     int32_t Data4;
     uint8_t time[8];
+    uint32_t Data1AlarmTimer;
+    uint32_t Data2AlarmTimer;
+    uint32_t Data3AlarmTimer;
+    uint32_t Data4AlarmTimer;
 }_DeviceData;
 
 #endif
