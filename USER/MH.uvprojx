@@ -136,7 +136,7 @@
             <DriverSelection>4101</DriverSelection>
           </Flash1>
           <bUseTDR>1</bUseTDR>
-          <Flash2>Segger\JL2CM3.dll</Flash2>
+          <Flash2>BIN\UL2CM3.DLL</Flash2>
           <Flash3></Flash3>
           <Flash4></Flash4>
           <pFcarmOut></pFcarmOut>
@@ -408,6 +408,11 @@
               <FileName>Client.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\Client.c</FilePath>
+            </File>
+            <File>
+              <FileName>DataFile.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\DataFile.c</FilePath>
             </File>
           </Files>
         </Group>
