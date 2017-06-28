@@ -12,10 +12,20 @@ typedef enum
     e_ClientMode_RJ45,
     e_ClientMode_GPRS,
 }e_GlobalConfig;
-    
+
+ typedef enum 
+{
+    SST_ServerIDLE=0,
+    SST_ServerRun,
+    CST_ClientHasData,
+    CST_ClientNoData,
+}e_Stat;
+
 typedef struct HostStat
 {
     uint8_t SDCardStat;
+    uint8_t ServerStat;
+    uint8_t ClientStat;
 }_HostStat;
 
 typedef struct GlobalConfig

@@ -129,7 +129,7 @@ void USART1_IRQHandler (void)
                 {
                     tail<<=8;
                     tail|=rtempdata;
-                    *(buf->pData+2+lenght++)=rtempdata;
+                    *(buf->pData+lenght++)=rtempdata;
                 }
                 else
                 {
@@ -169,7 +169,7 @@ void USART2_IRQHandler (void)
             {
                 tail<<=8;
                 tail|=rtempdata;
-                *(buf->pData+2+lenght++)=rtempdata;
+                *(buf->pData+lenght++)=rtempdata;
             }
             else
             {
@@ -208,7 +208,7 @@ void USART3_IRQHandler (void)
             {
                 tail<<=8;
                 tail|=rtempdata;
-                *(buf->pData+2+lenght++)=rtempdata;
+                *(buf->pData+lenght++)=rtempdata;
             }
             else
             {

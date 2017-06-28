@@ -96,6 +96,19 @@ void USART1_Init(uint32_t band)
    NVIC_Init(&NVIC_InitStructure);
    u1mbuf=CreateMbuf(250);
 //   gmbuf=CreateMbuf(120);
+
+}
+void Usart1_SendData(uint8_t *buffer,uint16_t len)
+{  
+    uint16_t i;
+    if(len==17)
+        i=0;
+    USART_ClearFlag(USART1,USART_FLAG_TC);	
+    for(i=0;i<len;i++)
+    {
+        USART_SendData(USART1,*buffer++);	 
+        while(USART_GetFlagStatus(USART1, USART_FLAG_TC) == RESET ); 	
+    }
 }
 void USART2_Init(uint32_t band)
 {

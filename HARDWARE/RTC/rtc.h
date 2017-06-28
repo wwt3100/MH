@@ -39,6 +39,6 @@ void GregorianDay(struct rtc_time * tm);
 void to_tm(uint32_t tim, struct rtc_time * tm);
 uint32_t mktimev(struct rtc_time *tm);
 
-u32 TimeCompress(void);
+u32 TimeCompress(uint8_t *time);
 
 #endif /* __XXX_H */

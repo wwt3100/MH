@@ -27,10 +27,11 @@ uint32_t Led1Timer=0,Led2Timer=0,Led3Timer=0;
 
 volatile _HostStat hstat;
 volatile _GlobalConfig _gc;
-FATFS *fs;
+
 
 const _DeviceConfig cDc[255]__attribute__((at(0x08008000)))={0};
-
+const char MHID[12]={"MH6001A001"};//__attribute__((at(0x08008000)))={"MH6001A001"};
+_DeviceData _Dd[255]={0};
 extern __mbuf *u1mbuf,*u2mbuf,*u3mbuf,*gmbuf;
 extern struct rtc_time systmtime;
 
@@ -51,16 +52,17 @@ static void gpio_init(void)
 int main(void)
 {	 
     uint8_t l=0;
-    unsigned long fre_clust,free;//,total;
+    unsigned long fre_clust,freespace;//,total;
     FRESULT fres;
+    FATFS *fs;
     _DeviceConfig dc;
-    strcpy((char*)dc.ID,"HS300BS58F");
+    strcpy((char*)dc.ID,"HS500BS657");
     _gc.MonitorDeviceNum=1;
     _gc.SamplingInterval=10;
     _gc.RetryInterval=11;
     
     
-    fs=(FATFS*)malloc(sizeof(FATFS));	    
+    fs=malloc(sizeof(FATFS));	    
     SysTick_Init();
     NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);//设置中断优先级分组为组2：2位抢占优先级，2位响应优先级
 	gpio_init();
@@ -80,8 +82,8 @@ int main(void)
         if(fres==FR_OK)
         {
             //total = (fs->n_fatent - 2) * fs->csize;
-            free = fre_clust * fs->csize;
-            if(free<8192)      
+            freespace = fre_clust * fs->csize;
+            if(freespace<8192)      
                 hstat.SDCardStat=3;         //SD卡空间不足
             else 
                 hstat.SDCardStat=1;
@@ -90,12 +92,14 @@ int main(void)
         {
             hstat.SDCardStat=2;
         }
+        f_mount(0,"0:",1);
 	}
     else    
     {
         startupsderro:
         hstat.SDCardStat=0;
     }
+    free(fs);
     timer_init(&Led3Timer,500);
 	while(1)
 	{
@@ -103,7 +107,7 @@ int main(void)
         if(timer_check(Led3Timer))
         {
             timer_init(&Led3Timer,2000);
-            l=~l;
+            (l==0)?(l=1):(l=0);
             LED3(l);
         }
         

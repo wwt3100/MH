@@ -176,3 +176,26 @@ void GregorianDay(struct rtc_time * tm)
 	day += lastYear*365 + leapsToDate + MonthOffset[tm->tm_mon-1] + tm->tm_mday; /*计算从公元元年元旦到计数日期一共有多少天*/
 	tm->tm_wday=day%7;
 }
+u32 TimeCompress(uint8_t *time)
+{							//   年      月  	 日		 时		  分	   秒  
+   u32 t=0;				//[1111,11][11,11][11,111][1,1111,][1111,11][11,1111]
+   if(time==NULL)
+   {
+       t|=(systmtime.tm_year%100)<<26;//99年	6bits
+       t|=systmtime.tm_mon<<22;		//12月  4bits
+       t|=systmtime.tm_mday<<17;		//31日  5bits
+       t|=systmtime.tm_hour<<12;	    //24时  5bits
+       t|=systmtime.tm_min<<6;		//59分  6bits
+       t|=systmtime.tm_sec;			//59秒  6bits
+   }
+   else
+   {
+       t|=(time[0]%100)<<26;//99年	6bits
+       t|=time[1]<<22;		//12月  4bits
+       t|=time[2]<<17;		//31日  5bits
+       t|=time[3]<<12;	    //24时  5bits
+       t|=time[4]<<6;		//59分  6bits
+       t|=time[5];			//59秒  6bits
+   }
+   return t ;
+}
