@@ -15,8 +15,7 @@
 
 
 
-uint8_t Server_Receive(void);
-
+uint8_t Client_Receive(void);
 
 
 

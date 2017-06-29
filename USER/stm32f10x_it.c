@@ -135,7 +135,7 @@ void USART1_IRQHandler (void)
                 {
                     head=rtempdata;
                     buf->usable=1;
-                    buf->datasize=lenght+4;
+                    buf->datasize=lenght;
                     buf->pNext=(__mbuf*)CreateMbuf(250);
                     tail=0;
                     lenght=0;
@@ -175,7 +175,7 @@ void USART2_IRQHandler (void)
             {
                 head=rtempdata;
                 buf->usable=1;
-                buf->datasize=lenght+4;
+                buf->datasize=lenght;
                 buf->pNext=(__mbuf*)CreateMbuf(250);
                 tail=0;
                 lenght=0;
@@ -214,7 +214,7 @@ void USART3_IRQHandler (void)
             {
                 head=rtempdata;
                 buf->usable=1;
-                buf->datasize=lenght+4;
+                buf->datasize=lenght;
                 buf->pNext=(__mbuf*)CreateMbuf(250);
                 tail=0;
                 lenght=0;

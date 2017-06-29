@@ -26,14 +26,14 @@ void SaveData2RecodeFile(_DeviceData *dd)
             fres=f_findfirst(&dj, &fno, "", filename);
             if(fres == FR_NO_FILE || fres == FR_OK)
             {
-                if(fres == FR_NO_FILE || fno.fname[0]==0)
-                {
-                    f_open(&fp,filename,FA_CREATE_ALWAYS | FA_WRITE | FA_READ);
-                    f_printf(&fp,"Data\tTime\tTemp\tHumidity\r\n");
-                    strcpy(fno.fname,filename);
-                    f_close(&fp);
-                }
-                fres=f_open(&fp,fno.fname,FA_OPEN_APPEND | FA_WRITE | FA_READ);
+//                if(fres == FR_NO_FILE || fno.fname[0]==0)   //定义文件头
+//                {
+//                    f_open(&fp,filename,FA_CREATE_ALWAYS | FA_WRITE | FA_READ);
+//                    f_printf(&fp,"Data\tTime\tTemp\tHumidity\r\n");
+//                    strcpy(fno.fname,filename);
+//                    f_close(&fp);
+//                }
+                fres=f_open(&fp,fno.fname,FA_OPEN_APPEND | FA_WRITE | FA_READ);   //打开文件,如果不存在则新建
                 if(fres==FR_OK)
                 {
                     f_printf(&fp,"%d-%d-%d\t",dd->time[0]+2000,dd->time[1],dd->time[2]);

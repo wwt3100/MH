@@ -17,7 +17,7 @@
 #include <string.h>
 
 #include "485Server.h"
-
+#include "Client.h"
 //add 报警日志 保存 上传
 // 卡坏 上传 不格式化
 
@@ -29,7 +29,7 @@ volatile _HostStat hstat;
 volatile _GlobalConfig _gc;
 
 
-const _DeviceConfig cDc[255]__attribute__((at(0x08008000)))={0};
+const _DeviceConfig cDc[255]__attribute__((at(0x08001000)))={0};
 const char MHID[12]={"MH6001A001"};//__attribute__((at(0x08008000)))={"MH6001A001"};
 _DeviceData _Dd[255]={0};
 extern __mbuf *u1mbuf,*u2mbuf,*u3mbuf,*gmbuf;
@@ -104,6 +104,7 @@ int main(void)
 	while(1)
 	{
         Server_Process();
+        Client_Receive();
         if(timer_check(Led3Timer))
         {
             timer_init(&Led3Timer,2000);

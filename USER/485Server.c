@@ -36,15 +36,25 @@ extern volatile _GlobalConfig _gc;
 extern volatile _HostStat hstat;
 _DeviceData ts;
 volatile uint8_t stat=0,resend=0,dev=0;
-uint32_t timeout=0;
+uint32_t timeout=0,PCmsgtimeout=0;
 uint32_t SamplingIntervalTimer=1;
+
+static enum 
+{
+    e_Stat_Sampling,
+    e_Stat_SampleingWait,
+    e_Stat_Idle,
+    e_Stat_PCMessage,
+    e_Stat_PCMessageWait,
+}__485ServerStat;
+
 void Server_Process()
 {
-
+    static uint8_t laststat=0;
     switch(stat)
     {
-        case 0:
-            stat=1;
+        case e_Stat_Sampling:
+            stat=e_Stat_SampleingWait;
             //Server_Send67((cDc[i].ID));
             Server_Send67("HS500BS657"); //for test
             timer_init(&timeout,_gc.RetryInterval*100);
@@ -52,9 +62,10 @@ void Server_Process()
             {
                 dev++;
                 resend=0;
+                stat=e_Stat_Idle;
             }
             break;
-        case 1:
+        case e_Stat_SampleingWait:
             if(Server_Receive()==1)
             {
                 if(strcmp(((cDc[dev]).ID),"HS500BS657"))  //for test
@@ -70,6 +81,10 @@ void Server_Process()
                     else
                     {
                         _Dd[dev].Data1AlarmTimer=0;
+                        if(_Dd[dev].Alram[0]==1)
+                        {
+                            //短信报警解除
+                        }
                     }
                     if(_Dd[dev].Data2>cDc[dev].Data2Max || _Dd[dev].Data2<cDc[dev].Data2Min)
                     {
@@ -78,6 +93,10 @@ void Server_Process()
                     else
                     {
                         _Dd[dev].Data2AlarmTimer=0;
+                        if(_Dd[dev].Alram[1]==1)
+                        {
+                            //短信报警解除
+                        }
                     }
                     if(_Dd[dev].Data3>cDc[dev].Data3Max || _Dd[dev].Data3<cDc[dev].Data3Min)
                     {
@@ -86,6 +105,10 @@ void Server_Process()
                     else
                     {
                         _Dd[dev].Data3AlarmTimer=0;
+                        if(_Dd[dev].Alram[2]==1)
+                        {
+                            //短信报警解除
+                        }
                     }
                     if(_Dd[dev].Data4>cDc[dev].Data4Max || _Dd[dev].Data4<cDc[dev].Data4Min)
                     {
@@ -94,58 +117,86 @@ void Server_Process()
                     else
                     {
                         _Dd[dev].Data4AlarmTimer=0;
+                        if(_Dd[dev].Alram[3]==1)
+                        {
+                            //短信报警解除
+                        }
                     }
-                    if(timer_check(_Dd[dev].Data1AlarmTimer))
+                    if(timer_check(_Dd[dev].Data1AlarmTimer) && _Dd[dev].Alram[0]==0)
                     {
+                        _Dd[dev].Alram[0]=1;
                         //短信报警
                     }
-                    if(timer_check(_Dd[dev].Data2AlarmTimer))
+                    if(timer_check(_Dd[dev].Data2AlarmTimer) && _Dd[dev].Alram[1]==0)
                     {
+                        _Dd[dev].Alram[1]=1;
                         //短信报警
                     }
-                    if(timer_check(_Dd[dev].Data3AlarmTimer))
+                    if(timer_check(_Dd[dev].Data3AlarmTimer) && _Dd[dev].Alram[2]==0)
                     {
+                        _Dd[dev].Alram[2]=1;
                         //短信报警
                     }
-                    if(timer_check(_Dd[dev].Data4AlarmTimer))
+                    if(timer_check(_Dd[dev].Data4AlarmTimer) && _Dd[dev].Alram[3]==0)
                     {
+                        _Dd[dev].Alram[3]=1;
                         //短信报警
                     }
                     dev++;
                     resend=0;
-                    if(hstat.ClientStat==CST_ClientHasData)
-                    {
-                        hstat.ServerStat=SST_ServerIDLE;
-                    }
-                    else
-                    {
-                        stat=0;
-                    }
+                    stat=0;
                 }
                 else //如果接收到的是其他信息
                 {
+                    hstat.ServerStat=SST_ServerRun;
                     stat=0;
                 }
             }
             if(timer_check(timeout))
             {
-                if(hstat.ClientStat==CST_ClientHasData)
-                {
-                    hstat.ServerStat=SST_ServerIDLE;
-                }
-                else
-                {
-                    stat=0;
-                }
+                    stat=e_Stat_Sampling;
             }
-            if(timer_check(SamplingIntervalTimer))
+            break;
+        case e_Stat_Idle:
+            if(hstat.ClientStat==CST_ClientHasData)
             {
-                stat=0;
-                hstat.ServerStat=SST_ServerRun;
+                laststat=e_Stat_Idle;
+                stat=e_Stat_PCMessage;
             }
             else
             {
-                hstat.ServerStat=SST_ServerIDLE;
+                if(timer_check(SamplingIntervalTimer))
+                {
+                    stat=e_Stat_Sampling;
+                }
+            }
+            break;
+        case e_Stat_PCMessage:
+            timer_init(&PCmsgtimeout,_gc.RetryInterval*100);
+            if(u1mbuf->usable==1)
+            {
+                __485SetSend();
+                Usart3_SendData((uint8_t*)&WLP_TAIL,4); //Send PC Message
+                Usart3_SendData(u1mbuf->pData,u1mbuf->datasize);//Send PC Message
+                __485SetReceive();
+                stat=e_Stat_PCMessageWait;
+            }
+            else
+            {
+                hstat.ClientStat=CST_ClientNoData;
+                stat=laststat;
+            }
+            break;
+        case e_Stat_PCMessageWait:
+            if(Server_Receive()==1)
+            {
+                stat=laststat;
+                hstat.ClientStat=CST_ClientNoData;
+            }
+            if(timer_check(SamplingIntervalTimer))
+            {
+                stat=e_Stat_Sampling;
+                hstat.ClientStat=CST_ClientNoData;
             }
             break;
         default:
@@ -193,26 +244,6 @@ uint8_t Server_Receive()
     {
         goto processend;
     }
-//    if(memcmp(PRODUCT_SERISE,(u3mbuf->pData+2),10)==0)//如果是发给网关的信息
-//    {
-//        switch(*(u3mbuf->pData+12))
-//        {
-//            case 0x70:
-//                IDLE_TIME=*(u3mbuf->pData+13)<<8;  //大端小端?
-//                IDLE_TIME|=*(u3mbuf->pData+14);
-//                IDLE_TIME*=1000;
-//                WAIT_SYNCH_TIME=*(u3mbuf->pData+15)<<8;  //大端小端?
-//                WAIT_SYNCH_TIME|=*(u3mbuf->pData+16);
-//                WAIT_SYNCH_TIME*=1000;
-//                WAIT_TRANS_TIME=*(u3mbuf->pData+17)<<8;  //大端小端?
-//                WAIT_TRANS_TIME|=*(u3mbuf->pData+18);
-//                WAIT_TRANS_TIME*=1000;
-//                break;
-//            default:
-//                break;
-//        }
-//    }
-//    else //其他信息
     {
         switch(*(u3mbuf->pData+10))
         {

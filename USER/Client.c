@@ -44,13 +44,13 @@ uint8_t Client_Receive()
     {
         Verify = Verify ^ *(u1mbuf->pData+i);
     }
-    if(Verify != *(u3mbuf->pData+i)) //校验错误
+    if(Verify != *(u1mbuf->pData+i)) //校验错误
     {
         goto clientprocessend;
     }
-    if(memcmp(MHID,(u3mbuf->pData),10)==0)//如果是发给管理主机的信息
+    if(memcmp(MHID,(u1mbuf->pData),10)==0)//如果是发给管理主机的信息
     {
-        switch(*(u3mbuf->pData+10))
+        switch(*(u1mbuf->pData+10))
         {
             case 0x70:
 
@@ -61,19 +61,16 @@ uint8_t Client_Receive()
     }
     else //发给其他设备的信息
     {
-        if(hstat.ServerStat==SST_ServerIDLE)
+        if(hstat.ClientStat==CST_ClientHasData)
         {
-            Usart3_SendData((uint8_t*)&WLP_TAIL,4); //Send to PC
-            Usart3_SendData(u1mbuf->pData,u1mbuf->datasize);//Send to PC
+            return ret;
         }
         else
         {
             hstat.ClientStat=CST_ClientHasData;
-            return ret;
         }
     }
     clientprocessend:
-    hstat.ClientStat=CST_ClientNoData;
     tb=u1mbuf->pNext;
     u1mbuf->usable=0;
     free(u1mbuf);
