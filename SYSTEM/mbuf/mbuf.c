@@ -11,7 +11,7 @@ __mbuf* CreateMbuf(uint16_t length)
         return p;
     p->pNext=NULL;
     p->usable=0;
-    p->packed=0;
+//    p->packed=0;
     p->pData=(uint8_t*)p+sizeof(__mbuf);
     return p;
 }

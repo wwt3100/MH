@@ -30,13 +30,59 @@ extern __mbuf *u1mbuf,*u2mbuf,*u3mbuf,*gmbuf;
 extern struct rtc_time systmtime;
 
 extern volatile _GlobalConfig _gc;
+extern const _GlobalConfig c_gc;
 extern _HostStat hstat;
 
 extern const char MHID[12];
+
+///////////////////////////////////////////////////////////////
+// 设置命令
+//
 static void Client_Rx30Tx31()
 {
+    uint8_t i=0,Verify=0;
     uint8_t sendbuf[20]={0};
-    
+    memcpy((uint8_t*)_gc.PhoneNumber1,u1mbuf->pData+12,88);
+    STMFLASH_Write((uint32_t)&c_gc,(uint16_t*)&_gc,sizeof(_GlobalConfig));
+    memcpy(sendbuf,&WLP_HEAD,4);
+    memcpy(sendbuf+4,MHID,10);
+    sendbuf[14]=0x31;
+    sendbuf[15]=0x01;
+    for(i=4;i<15;i++)   //i=0  =>  i=4
+    {
+        Verify = Verify ^ (sendbuf[i]);
+    }
+    sendbuf[16]=Verify;
+    memcpy(sendbuf+16,&WLP_TAIL,4);
+    Usart1_SendData(sendbuf,21);
+}
+
+///////////////////////////////////////////////////////////////
+// 读取设置信息
+//
+static void Client_Rx32Tx33()
+{
+    uint8_t i=0,Verify=0;
+    uint8_t *sendbuf;
+    uint32_t num;
+    FSIZE_t size;
+    sendbuf=malloc(248);
+    memset(sendbuf,0,248);
+    memcpy(sendbuf,&WLP_HEAD,4);
+    memcpy(sendbuf+4,MHID,10);
+    sendbuf[14]=0x33;
+    sendbuf[15]=0x01;
+    memcpy(sendbuf+15,(uint8_t*)_gc.PhoneNumber1,89);
+    ReadTempFileSize(&size);
+    num=size/18;
+    memcpy(sendbuf+15+89,&num,4);
+    for(i=4;i<15+89;i++)   //i=0  =>  i=4
+    {
+        Verify = Verify ^ (sendbuf[i]);
+    }
+    sendbuf[16+89]=Verify;
+    memcpy(sendbuf+16+89,&WLP_TAIL,4);
+    Usart1_SendData(sendbuf,21);
 }
 uint8_t Client_Receive()
 {
@@ -59,6 +105,9 @@ uint8_t Client_Receive()
         {
             case 0x30: 
                 Client_Rx30Tx31(); //设置命令
+                break;
+            case 0x32:
+                Client_Rx32Tx33(); //读取设置信息
                 break;
             default:
                 break;

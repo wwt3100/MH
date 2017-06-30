@@ -188,7 +188,7 @@ uint8_t Server_Process()
                     timer_init(&SamplingIntervalTimer,_gc.SamplingInterval*1000); //设置采样间隔
                     if(SMSAlarmMessage!=NULL)
                     {
-                        SMSAlarmMessage=malloc(500);
+                        SMSAlarmMessage=malloc(248);
                     }
                 }
             }
@@ -231,12 +231,12 @@ void Server_Send67(uint8_t *pID)
 {
     uint8_t *Sendbuff,Verify=0,i=0;
     
-    Sendbuff=malloc(500);
-    memset(Sendbuff,0,500);
+    Sendbuff=malloc(248);
+    memset(Sendbuff,0,248);
     memcpy(Sendbuff,&WLP_HEAD,4);
     memcpy(Sendbuff+4,pID,10);
     Sendbuff[14]=0x67;
-    for(i=0;i<11;i++)
+    for(i=4;i<11;i++)   //i=0  =>  i=4
     {
         Verify = Verify ^ (Sendbuff[i]);
     }

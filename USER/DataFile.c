@@ -1,11 +1,6 @@
 
 #include "DataFile.h"
-#include "ff.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include "sdio_sdcard.h"
-#include "rtc.h"
+
 
 void SaveData2RecodeFile(_DeviceData *dd)
 {
@@ -88,7 +83,32 @@ void SaveData2TempFile(_DeviceData *dd)
     }
 }
 
-
+FRESULT ReadTempFileSize(FSIZE_t *size)
+{
+    FATFS *fs;     /* Ponter to the filesystem object */
+    FRESULT fres=FR_NOT_READY;
+    FIL fp;
+    *size=0;
+    if(SD_CardIsInserted())
+    {
+        fs = malloc(sizeof (FATFS));
+        fres=f_mount(fs, "0:", 0);
+        if(fres==FR_OK)
+        {
+            fres=f_open(&fp,".Tempdata",FA_OPEN_EXISTING);
+            switch(fres)
+            {
+                case FR_OK:
+                    *size=f_size(&fp);
+                default:
+                    break;
+            }
+            f_mount(0,"0:",0);
+        }
+        free(fs);
+    }
+    return fres;
+}
 
 
 

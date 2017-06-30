@@ -6,8 +6,8 @@
 typedef struct TagMbuf	
 {
     struct TagMbuf	*pNext;
-    uint8_t packed;
-    uint8_t usable;//是否有buff可用
+    //uint8_t packed;
+    uint8_t usable;//是否是可用buff
     uint16_t datasize;// 可以使用数据大小
     uint8_t *pData;
 }__mbuf;

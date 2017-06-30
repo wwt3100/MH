@@ -28,7 +28,7 @@ uint32_t Led1Timer=0,Led2Timer=0,Led3Timer=0;
 uint32_t SMSAlarmTimer=1;
 volatile _HostStat hstat;
 volatile _GlobalConfig _gc;
-
+const _GlobalConfig c_gc;////__attribute__((at(0x08008000)));
 
 const _DeviceConfig cDc[255]__attribute__((at(0x08009000)))={0};
 const char MHID[12]={"MH6001A001"};//__attribute__((at(0x08008000)))={"MH6001A001"};

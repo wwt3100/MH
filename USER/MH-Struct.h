@@ -43,7 +43,7 @@ typedef struct GlobalConfig
     uint8_t SaveMode; //Save All , Save Monitor Device
     uint8_t SeverMode; //  485/zigbee/RJ45
     uint8_t ClientMode; // RJ45/GPRS
-    uint16_t MonitorDeviceNum; //监控的仪器数量
+    
     uint8_t PhoneNumber1[16];
     uint8_t PhoneNumber2[16];
     uint8_t PhoneNumber3[16];
@@ -55,9 +55,12 @@ typedef struct GlobalConfig
     uint8_t OverLimitONOFF;
     uint8_t OfflineAlarmONOFF;
     uint8_t AlarmONOFF;
-    uint16_t SamplingInterval;  //采样间隔 单位 秒  固定60秒
-    uint16_t RecodeInterval;  //记录间隔 固定60秒
+    uint8_t SMSAlarmNum;      //短信报警连发次数
+    uint8_t SamplingInterval;  //采样间隔 单位 秒  固定60秒
     
+    uint8_t MonitorDeviceNum; //监控的仪器数量
+    
+    uint16_t RecodeInterval;  //记录间隔 固定30分钟
     uint16_t RetryInterval;  //采样重试时间间隔 单位0.1s
     
 }_GlobalConfig;
