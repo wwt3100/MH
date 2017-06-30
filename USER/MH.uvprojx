@@ -414,6 +414,11 @@
               <FileType>1</FileType>
               <FilePath>.\DataFile.c</FilePath>
             </File>
+            <File>
+              <FileName>SMSAlarm.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\SMSAlarm.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

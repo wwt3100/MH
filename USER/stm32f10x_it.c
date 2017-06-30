@@ -108,39 +108,29 @@ void USART1_IRQHandler (void)
 	{
 		USART_ClearITPendingBit(USART1,USART_IT_RXNE); 
 		rtempdata = USART_ReceiveData(USART1);
-        //USART_SendData(USART3,rtempdata);
-//        if(Mode==GPRSMode)
-//        {
-//        }
-//        else
+        if(head != 0x01167b28)
         {
-            if(head != 0x01167b28)
+            head<<=8;
+            head|=rtempdata;
+        }
+        else
+        {
+            while(buf->pNext!=NULL)
             {
-                head<<=8;
-                head|=rtempdata;
+                buf=buf->pNext;
             }
-            else
+            tail<<=8;
+            tail|=rtempdata;
+            *(buf->pData+lenght++)=rtempdata;
+            if(tail==0x297d7e04)
             {
-                while(buf->pNext!=NULL)
-                {
-                    buf=buf->pNext;
-                }
-                if(tail!=0x297d7e04)
-                {
-                    tail<<=8;
-                    tail|=rtempdata;
-                    *(buf->pData+lenght++)=rtempdata;
-                }
-                else
-                {
-                    head=rtempdata;
-                    buf->usable=1;
-                    buf->datasize=lenght;
-                    buf->pNext=(__mbuf*)CreateMbuf(250);
-                    tail=0;
-                    lenght=0;
-                }
-            }
+                head=rtempdata;
+                buf->usable=1;
+                buf->datasize=lenght;
+                buf->pNext=(__mbuf*)CreateMbuf(500);
+                tail=0;
+                lenght=0;
+            }    
         }
 	}
 }
@@ -165,21 +155,18 @@ void USART2_IRQHandler (void)
             {
                 buf=buf->pNext;
             }
-            if(tail!=0x297d7e04)
-            {
-                tail<<=8;
-                tail|=rtempdata;
-                *(buf->pData+lenght++)=rtempdata;
-            }
-            else
+            tail<<=8;
+            tail|=rtempdata;
+            *(buf->pData+lenght++)=rtempdata;
+            if(tail==0x297d7e04)
             {
                 head=rtempdata;
                 buf->usable=1;
                 buf->datasize=lenght;
-                buf->pNext=(__mbuf*)CreateMbuf(250);
+                buf->pNext=(__mbuf*)CreateMbuf(500);
                 tail=0;
                 lenght=0;
-            }
+            }    
         }
 	}
 }
@@ -204,24 +191,20 @@ void USART3_IRQHandler (void)
             {
                 buf=buf->pNext;
             }
-            if(tail!=0x297d7e04)
-            {
-                tail<<=8;
-                tail|=rtempdata;
-                *(buf->pData+lenght++)=rtempdata;
-            }
-            else
+            tail<<=8;
+            tail|=rtempdata;
+            *(buf->pData+lenght++)=rtempdata;
+            if(tail==0x297d7e04)
             {
                 head=rtempdata;
                 buf->usable=1;
                 buf->datasize=lenght;
-                buf->pNext=(__mbuf*)CreateMbuf(250);
+                buf->pNext=(__mbuf*)CreateMbuf(500);
                 tail=0;
                 lenght=0;
-                
-            }
+            }    
         }
-	}
+    }
 }
 /******************************************************************************/
 /*                 STM32F10x Peripherals Interrupt Handlers                   */

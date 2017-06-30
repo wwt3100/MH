@@ -18,20 +18,22 @@
 
 #include "485Server.h"
 #include "Client.h"
+#include "SMSAlarm.h"
 //add 报警日志 保存 上传
 // 卡坏 上传 不格式化
 
 volatile uint32_t g_tick_1ms;
 
 uint32_t Led1Timer=0,Led2Timer=0,Led3Timer=0;
-
+uint32_t SMSAlarmTimer=1;
 volatile _HostStat hstat;
 volatile _GlobalConfig _gc;
 
 
-const _DeviceConfig cDc[255]__attribute__((at(0x08001000)))={0};
+const _DeviceConfig cDc[255]__attribute__((at(0x08009000)))={0};
 const char MHID[12]={"MH6001A001"};//__attribute__((at(0x08008000)))={"MH6001A001"};
 _DeviceData _Dd[255]={0};
+extern uint8_t *SMSAlarmMessage;
 extern __mbuf *u1mbuf,*u2mbuf,*u3mbuf,*gmbuf;
 extern struct rtc_time systmtime;
 
@@ -103,7 +105,14 @@ int main(void)
     timer_init(&Led3Timer,500);
 	while(1)
 	{
-        Server_Process();
+        if(Server_Process()==e_Stat_Idle)
+        {
+            if(timer_check(SMSAlarmTimer))
+            {
+                SMSAlarm();     //短信报警
+            }
+
+        }
         Client_Receive();
         if(timer_check(Led3Timer))
         {

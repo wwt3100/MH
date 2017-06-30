@@ -6,7 +6,7 @@
 
 
 
-void Server_Process(void);
+uint8_t Server_Process(void);
 
 __inline static void __485SetReceive()
 {

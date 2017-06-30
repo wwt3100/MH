@@ -38,31 +38,38 @@ _DeviceData ts;
 volatile uint8_t stat=0,resend=0,dev=0;
 uint32_t timeout=0,PCmsgtimeout=0;
 uint32_t SamplingIntervalTimer=1;
+extern uint8_t *SMSAlarmMessage;
 
-static enum 
+uint8_t Server_Process()
 {
-    e_Stat_Sampling,
-    e_Stat_SampleingWait,
-    e_Stat_Idle,
-    e_Stat_PCMessage,
-    e_Stat_PCMessageWait,
-}__485ServerStat;
-
-void Server_Process()
-{
+    __mbuf* tb;
     static uint8_t laststat=0;
     switch(stat)
     {
         case e_Stat_Sampling:
-            stat=e_Stat_SampleingWait;
-            //Server_Send67((cDc[i].ID));
-            Server_Send67("HS500BS657"); //for test
-            timer_init(&timeout,_gc.RetryInterval*100);
-            if(resend++>=2)
+            if(hstat.ClientStat==CST_ClientHasData)
             {
-                dev++;
-                resend=0;
-                stat=e_Stat_Idle;
+                laststat=e_Stat_Sampling;
+                stat=e_Stat_PCMessage;
+            }
+            else
+            {
+                stat=e_Stat_SampleingWait;
+                //Server_Send67((cDc[i].ID));
+                Server_Send67("HS500BS657"); //for test
+                timer_init(&timeout,_gc.RetryInterval*100);
+                if(resend++>=2)  //如果发送3次没有收到回复
+                {
+                    //下线报警
+                    dev++;
+                    resend=0;
+                    if(_gc.MonitorDeviceNum<=dev)
+                    {
+                        dev=0;
+                        timer_init(&SamplingIntervalTimer,_gc.SamplingInterval*1000); //设置采样间隔
+                        stat=e_Stat_Idle;
+                    }
+                }
             }
             break;
         case e_Stat_SampleingWait:
@@ -144,17 +151,26 @@ void Server_Process()
                     }
                     dev++;
                     resend=0;
-                    stat=0;
+                    stat=e_Stat_Sampling;
                 }
                 else //如果接收到的是其他信息
                 {
                     hstat.ServerStat=SST_ServerRun;
-                    stat=0;
+                    stat=e_Stat_Sampling;
                 }
             }
-            if(timer_check(timeout))
+            if(_gc.MonitorDeviceNum<=dev)
             {
+                dev=0;
+                timer_init(&SamplingIntervalTimer,_gc.SamplingInterval*1000); //设置采样间隔
+                stat=e_Stat_Idle;
+            }
+            else
+            {
+                if(timer_check(timeout))
+                {
                     stat=e_Stat_Sampling;
+                }
             }
             break;
         case e_Stat_Idle:
@@ -167,19 +183,29 @@ void Server_Process()
             {
                 if(timer_check(SamplingIntervalTimer))
                 {
+                    dev=0;
                     stat=e_Stat_Sampling;
+                    timer_init(&SamplingIntervalTimer,_gc.SamplingInterval*1000); //设置采样间隔
+                    if(SMSAlarmMessage!=NULL)
+                    {
+                        SMSAlarmMessage=malloc(500);
+                    }
                 }
             }
             break;
         case e_Stat_PCMessage:
-            timer_init(&PCmsgtimeout,_gc.RetryInterval*100);
             if(u1mbuf->usable==1)
             {
                 __485SetSend();
-                Usart3_SendData((uint8_t*)&WLP_TAIL,4); //Send PC Message
+                Usart3_SendData((uint8_t*)&WLP_HEAD,4); //Send PC Message
                 Usart3_SendData(u1mbuf->pData,u1mbuf->datasize);//Send PC Message
                 __485SetReceive();
+                tb=u1mbuf->pNext;
+                u1mbuf->usable=0;
+                free(u1mbuf);
+                u1mbuf=tb;
                 stat=e_Stat_PCMessageWait;
+                timer_init(&PCmsgtimeout,_gc.RetryInterval*100);
             }
             else
             {
@@ -188,14 +214,9 @@ void Server_Process()
             }
             break;
         case e_Stat_PCMessageWait:
-            if(Server_Receive()==1)
+            if(Server_Receive()==1 || timer_check(PCmsgtimeout))
             {
                 stat=laststat;
-                hstat.ClientStat=CST_ClientNoData;
-            }
-            if(timer_check(SamplingIntervalTimer))
-            {
-                stat=e_Stat_Sampling;
                 hstat.ClientStat=CST_ClientNoData;
             }
             break;
@@ -203,18 +224,15 @@ void Server_Process()
             stat=1;
             break;
     }
-    if(_gc.MonitorDeviceNum<=dev)
-    {
-        dev=0;
-        timer_init(&SamplingIntervalTimer,_gc.SamplingInterval*1000); //设置采样间隔
-    }
+    
+    return stat;
 }
 void Server_Send67(uint8_t *pID)
 {
     uint8_t *Sendbuff,Verify=0,i=0;
     
-    Sendbuff=malloc(250);
-    memset(Sendbuff,0,250);
+    Sendbuff=malloc(500);
+    memset(Sendbuff,0,500);
     memcpy(Sendbuff,&WLP_HEAD,4);
     memcpy(Sendbuff+4,pID,10);
     Sendbuff[14]=0x67;
@@ -236,7 +254,7 @@ uint8_t Server_Receive()
     uint8_t ret=0;
     if(u3mbuf->usable!=1)
         return ret;
-    for(i=0;i<u3mbuf->datasize-4-4-1;i++) //计算校验
+    for(i=0;i<u3mbuf->datasize-4-1;i++) //计算校验
     {
         Verify = Verify ^ *(u3mbuf->pData+i);
     }
@@ -250,11 +268,11 @@ uint8_t Server_Receive()
             case 0x68:
                 switch(u3mbuf->datasize) //按照字节数来区分协议
                 {
-                    case 25+4:  
+                    case 25:  
                         memcpy(&(_Dd[dev].ID[0]),u3mbuf->pData,10);
                         memcpy(&(_Dd[dev].Data1),u3mbuf->pData+12,4);
                         memcpy(&(_Dd[dev].Data2),u3mbuf->pData+16,2);
-                        memcpy(&(_Dd[dev].Data3),u3mbuf->pData+18,2);
+                        _Dd[dev].Data3=0;
                         _Dd[dev].Data4=0;
                         ret=1;
                         break;
@@ -274,7 +292,7 @@ uint8_t Server_Receive()
         }
     }
     processend:
-    Usart1_SendData((uint8_t*)&WLP_TAIL,4); //Send to PC
+    Usart1_SendData((uint8_t*)&WLP_HEAD,4); //Send to PC
     Usart1_SendData(u3mbuf->pData,u3mbuf->datasize);//Send to PC
     tb=u3mbuf->pNext;
     u3mbuf->usable=0;

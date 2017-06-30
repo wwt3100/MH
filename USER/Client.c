@@ -33,6 +33,11 @@ extern volatile _GlobalConfig _gc;
 extern _HostStat hstat;
 
 extern const char MHID[12];
+static void Client_Rx30Tx31()
+{
+    uint8_t sendbuf[20]={0};
+    
+}
 uint8_t Client_Receive()
 {
     uint8_t i=0,Verify=0x00;
@@ -40,7 +45,7 @@ uint8_t Client_Receive()
     uint8_t ret=0;
     if(u1mbuf->usable!=1)
         return ret;
-    for(i=0;i<u1mbuf->datasize-4-4-1;i++) //计算校验
+    for(i=0;i<u1mbuf->datasize-4-1;i++) //计算校验
     {
         Verify = Verify ^ *(u1mbuf->pData+i);
     }
@@ -48,11 +53,22 @@ uint8_t Client_Receive()
     {
         goto clientprocessend;
     }
-    if(memcmp(MHID,(u1mbuf->pData),10)==0)//如果是发给管理主机的信息
+    if(memcmp(MHID,(u1mbuf->pData),10)==0)//序列号相同    //如果是发给管理主机的信息
     {
         switch(*(u1mbuf->pData+10))
         {
-            case 0x70:
+            case 0x30: 
+                Client_Rx30Tx31(); //设置命令
+                break;
+            default:
+                break;
+        }
+    }
+    else if(u1mbuf->pData[0]==0)  //序列号为0 重新写序列号
+    {
+        switch(*(u1mbuf->pData+10))
+        {
+            case 0xCC:
 
                 break;
             default:
@@ -61,14 +77,8 @@ uint8_t Client_Receive()
     }
     else //发给其他设备的信息
     {
-        if(hstat.ClientStat==CST_ClientHasData)
-        {
-            return ret;
-        }
-        else
-        {
-            hstat.ClientStat=CST_ClientHasData;
-        }
+        hstat.ClientStat=CST_ClientHasData;
+        return ret;
     }
     clientprocessend:
     tb=u1mbuf->pNext;

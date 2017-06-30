@@ -21,6 +21,15 @@ typedef enum
     CST_ClientNoData,
 }e_Stat;
 
+typedef enum 
+{
+    e_Stat_Sampling,
+    e_Stat_SampleingWait,
+    e_Stat_Idle,
+    e_Stat_PCMessage,
+    e_Stat_PCMessageWait,
+}__485ServerStat;
+
 typedef struct HostStat
 {
     uint8_t SDCardStat;
@@ -40,10 +49,15 @@ typedef struct GlobalConfig
     uint8_t PhoneNumber3[16];
     uint8_t PhoneNumber4[16];
     uint8_t PhoneNumber5[16];
-    uint16_t SMSAlarmInterval;  //短信报警间隔
-    uint16_t AlarmIntervalTime; //报警间隔时间 延时报警?
-    uint16_t SamplingInterval;  //单位 秒 不少于30秒
-    uint16_t RecodeInterval;  //记录间隔 不少于60秒
+    uint8_t OverLimitInterval;  //超限报警间隔
+    uint8_t OfflineAlarmInterval;  //掉线报警间隔
+    uint8_t AlarmIntervalTime; //声光报警间隔时间 
+    uint8_t OverLimitONOFF;
+    uint8_t OfflineAlarmONOFF;
+    uint8_t AlarmONOFF;
+    uint16_t SamplingInterval;  //采样间隔 单位 秒  固定60秒
+    uint16_t RecodeInterval;  //记录间隔 固定60秒
+    
     uint16_t RetryInterval;  //采样重试时间间隔 单位0.1s
     
 }_GlobalConfig;
@@ -53,6 +67,7 @@ typedef enum
     e_Temp,
     
 }e_DataType;
+
 typedef struct DeviceConfig
 {
     uint8_t ID[12]; //used 10byte
