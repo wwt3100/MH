@@ -84,6 +84,129 @@ static void Client_Rx32Tx33()
     memcpy(sendbuf+16+89,&WLP_TAIL,4);
     Usart1_SendData(sendbuf,21);
 }
+///////////////////////////////////////////////////////////////
+// 配置仪器
+//
+static void Client_Rx34Tx35()
+{
+    uint8_t i=0,Verify=0;
+    uint8_t sendbuf[20]={0};
+    
+}
+
+///////////////////////////////////////////////////////////////
+// 时间同步
+//
+static void Client_Rx76Tx77()
+{
+    uint8_t i=0,Verify=0;
+    uint8_t sendbuf[20]={0};
+    
+    //to do
+    
+    memcpy(sendbuf,&WLP_HEAD,4);
+    memcpy(sendbuf+4,MHID,10);
+    sendbuf[14]=0x77;
+    sendbuf[15]=0x01;
+    for(i=4;i<15;i++)   //i=0  =>  i=4
+    {
+        Verify = Verify ^ (sendbuf[i]);
+    }
+    sendbuf[16]=Verify;
+    memcpy(sendbuf+16,&WLP_TAIL,4);
+    Usart1_SendData(sendbuf,21);
+}
+
+///////////////////////////////////////////////////////////////
+// 数据下载
+//
+static void Client_Rx5BTx5C()
+{
+    uint8_t i=0,Verify=0;
+    uint8_t *sendbuf;
+    uint32_t num,savenum;
+    FSIZE_t size;
+    sendbuf=malloc(248);
+    memcpy(sendbuf,u1mbuf->pData+11,4);
+    ReadTempFileSize(&size);
+    savenum=size/18;
+    
+    
+}
+
+///////////////////////////////////////////////////////////////
+// 报警记录下载
+//
+static void Client_Rx5DTx5E()
+{
+    uint8_t i=0,Verify=0;
+    uint8_t *sendbuf;
+    uint32_t num,savenum;
+    FSIZE_t size;
+    sendbuf=malloc(248);
+    memcpy(sendbuf,u1mbuf->pData+11,4);
+    ReadTempFileSize(&size);
+    savenum=size/18;
+    
+    
+}
+
+///////////////////////////////////////////////////////////////
+// 数据删除
+//
+static void Client_Rx72Tx73()
+{
+    FATFS *fs;
+    uint8_t i=0,Verify=0;
+    uint8_t sendbuf[20]={0};
+    uint8_t fres;
+    uint16_t cmd;
+    char filename[25]={0};
+    memcpy(&cmd,u1mbuf->pData+11,2);
+    sendbuf[15]=0x00;
+    if(SD_CardIsInserted())
+    {
+        fs = malloc(sizeof (FATFS));
+        fres=f_mount(fs, "0:", 0);
+        if(fres==FR_OK)
+        {
+            if(cmd==0x1991 ||cmd==0x9999)
+            {
+                fres=f_unlink(".Tempdata");
+            }
+            if(cmd==0x2992 || cmd==0x9999)
+            {
+                fres=f_unlink(".Alarmdata");
+            }
+            if(cmd==0x3993 || cmd==0x9999)
+            {
+                for(i=0;i<_gc.MonitorDeviceNum;i++)
+                {
+                    memcpy(filename,_Dd[i].ID,10);
+                    strcat(filename,".xls");
+                    fres=f_unlink(filename);
+                }
+            }
+            if(fres==FR_NO_FILE || fres==FR_OK)
+            {
+                sendbuf[15]=1;
+            }
+        }
+        free(fs);
+    }
+    memcpy(sendbuf,&WLP_HEAD,4);
+    memcpy(sendbuf+4,MHID,10);
+    sendbuf[14]=0x73;
+    //sendbuf[15]=0x01;
+    for(i=4;i<15;i++)   //i=0  =>  i=4
+    {
+        Verify = Verify ^ (sendbuf[i]);
+    }
+    sendbuf[16]=Verify;
+    memcpy(sendbuf+16,&WLP_TAIL,4);
+    Usart1_SendData(sendbuf,21);
+}
+
 uint8_t Client_Receive()
 {
     uint8_t i=0,Verify=0x00;

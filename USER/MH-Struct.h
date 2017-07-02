@@ -74,8 +74,8 @@ typedef enum
 typedef struct DeviceConfig
 {
     uint8_t ID[12]; //used 10byte
-    uint8_t DeviceName[32]; 
-    uint8_t DataType[4];
+    uint8_t DeviceName[24]; 
+    //uint8_t DataType[4];
     int32_t Data1Max;
     int32_t Data1Min;
     int32_t Data2Max;
