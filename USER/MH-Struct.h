@@ -80,10 +80,6 @@ typedef struct DeviceConfig
     int32_t Data1Min;
     int32_t Data2Max;
     int32_t Data2Min;
-    int32_t Data3Max;
-    int32_t Data3Min;
-    int32_t Data4Max;
-    int32_t Data4Min;
 }_DeviceConfig;
 
 typedef struct DeviceData
@@ -91,14 +87,23 @@ typedef struct DeviceData
     uint8_t ID[12];
     int32_t Data1;
     int32_t Data2;
-    int32_t Data3;
-    int32_t Data4;
     uint8_t time[8];
-    uint8_t Alram[4];
+    uint8_t Alram[4];   //[0]->offline   [1]->data1  [2]->data2
+    uint32_t OfflineAlarmTimer;
     uint32_t Data1AlarmTimer;
     uint32_t Data2AlarmTimer;
-    uint32_t Data3AlarmTimer;
-    uint32_t Data4AlarmTimer;
 }_DeviceData;
+
+//typedef struct AlarmLine
+//{
+//    uint8_t ID[12]; //used 10byte
+//    uint8_t time[4];
+//    int32_t Data1;
+//    int32_t Data2;
+//    int32_t Data1Max;
+//    int32_t Data1Min;
+//    int32_t Data2Max;
+//    int32_t Data2Min;
+//}_AlarmLine;
 
 #endif

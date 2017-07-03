@@ -105,11 +105,11 @@ void timer_init(uint32_t* pnTimer, uint32_t nValue)
  * @return int  0未使用或未到达 1到达终值
  * @note   计数器被人为赋值0时,该计数器为未使用状态
  *----------------------------------------------------------------------------*/
-uint8_t timer_check(uint32_t nTimer)
+uint32_t timer_check(uint32_t nTimer)
 {
     if (nTimer != 0 && (int32_t)(g_tick_1ms - nTimer) >= 0)
     {
-        return 1;   // true
+        return g_tick_1ms - nTimer;   // true
     }
     else
     {

@@ -25,7 +25,7 @@
 volatile uint32_t g_tick_1ms;
 
 uint32_t Led1Timer=0,Led2Timer=0,Led3Timer=0;
-uint32_t SMSAlarmTimer=1;
+//uint32_t SMSAlarmTimer=1;
 volatile _HostStat hstat;
 volatile _GlobalConfig _gc;
 const _GlobalConfig c_gc;////__attribute__((at(0x08008000)));
@@ -48,7 +48,10 @@ static void gpio_init(void)
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;		 //IO口速度为50MHz
     GPIO_Init(GPIOD, &GPIO_InitStructure);					 //根据设定参数初始化GPIOD.8
     GPIO_ResetBits(GPIOD,GPIO_Pin_8);						//485CTR
-
+    
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);
+    GPIO_Init(GPIOC, &GPIO_InitStructure);					 //根据设定参数初始化GPIOD.8
+    GPIO_SetBits(GPIOC,GPIO_Pin_6);
 }
 
 int main(void)
@@ -107,10 +110,10 @@ int main(void)
 	{
         if(Server_Process()==e_Stat_Idle)
         {
-            if(timer_check(SMSAlarmTimer))
-            {
-                SMSAlarm();     //短信报警
-            }
+//            if(timer_check(SMSAlarmTimer))
+//            {
+//                SMSAlarm();     //短信报警
+//            }
 
         }
         Client_Receive();

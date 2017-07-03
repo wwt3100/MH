@@ -35,6 +35,7 @@ extern struct rtc_time systmtime;
 extern volatile _GlobalConfig _gc;
 extern volatile _HostStat hstat;
 _DeviceData ts;
+
 volatile uint8_t stat=0,resend=0,dev=0;
 uint32_t timeout=0,PCmsgtimeout=0;
 uint32_t SamplingIntervalTimer=1;
@@ -54,13 +55,21 @@ uint8_t Server_Process()
             }
             else
             {
-                stat=e_Stat_SampleingWait;
-                //Server_Send67((cDc[i].ID));
-                Server_Send67("HS500BS657"); //for test
                 timer_init(&timeout,_gc.RetryInterval*100);
+                stat=e_Stat_SampleingWait;
+                //Server_Send67((cDc[dev].ID));
+                Server_Send67("HS500BS657"); //for test
                 if(resend++>=2)  //如果发送3次没有收到回复
                 {
-                    //下线报警
+                    
+                    if(_Dd[dev].Alram[0]==0)
+                    {
+                        timer_init(&(_Dd[dev].OfflineAlarmTimer),_gc.OfflineAlarmInterval*60000);
+                    }
+                    if(timer_check((_Dd[dev].OfflineAlarmTimer)) && _Dd[dev].Alram[0]<_gc.SMSAlarmNum)
+                    {
+                        _Dd[dev].Alram[0]+=1; //下线报警
+                    }
                     dev++;
                     resend=0;
                     if(_gc.MonitorDeviceNum<=dev)
@@ -81,6 +90,13 @@ uint8_t Server_Process()
                     //SaveData2RecodeFile(&cDc[device]);
                     SaveData2RecodeFile(&_Dd[dev]); 
                     SaveData2TempFile(&_Dd[dev]);
+                    
+                    _Dd[dev].OfflineAlarmTimer=0; 
+                    if(_Dd[dev].Alram[0]==1)
+                    {
+                        _Dd[dev].Alram[0]=0;
+                        // 设备上线恢复
+                    }
                     if(_Dd[dev].Data1>cDc[dev].Data1Max || _Dd[dev].Data1<cDc[dev].Data1Min)
                     {
                         timer_init(&_Dd[dev].Data1AlarmTimer,_gc.AlarmIntervalTime*1000);
@@ -88,7 +104,7 @@ uint8_t Server_Process()
                     else
                     {
                         _Dd[dev].Data1AlarmTimer=0;
-                        if(_Dd[dev].Alram[0]==1)
+                        if(_Dd[dev].Alram[0]!=0)
                         {
                             //短信报警解除
                         }
@@ -100,53 +116,19 @@ uint8_t Server_Process()
                     else
                     {
                         _Dd[dev].Data2AlarmTimer=0;
-                        if(_Dd[dev].Alram[1]==1)
+                        if(_Dd[dev].Alram[1]!=0)
                         {
                             //短信报警解除
                         }
                     }
-                    if(_Dd[dev].Data3>cDc[dev].Data3Max || _Dd[dev].Data3<cDc[dev].Data3Min)
+                    if(timer_check(_Dd[dev].Data1AlarmTimer) && _Dd[dev].Alram[1]<_gc.SMSAlarmNum)
                     {
-                        timer_init(&_Dd[dev].Data3AlarmTimer,_gc.AlarmIntervalTime*1000);
-                    }
-                    else
-                    {
-                        _Dd[dev].Data3AlarmTimer=0;
-                        if(_Dd[dev].Alram[2]==1)
-                        {
-                            //短信报警解除
-                        }
-                    }
-                    if(_Dd[dev].Data4>cDc[dev].Data4Max || _Dd[dev].Data4<cDc[dev].Data4Min)
-                    {
-                        timer_init(&_Dd[dev].Data4AlarmTimer,_gc.AlarmIntervalTime*1000);
-                    }
-                    else
-                    {
-                        _Dd[dev].Data4AlarmTimer=0;
-                        if(_Dd[dev].Alram[3]==1)
-                        {
-                            //短信报警解除
-                        }
-                    }
-                    if(timer_check(_Dd[dev].Data1AlarmTimer) && _Dd[dev].Alram[0]==0)
-                    {
-                        _Dd[dev].Alram[0]=1;
+                        _Dd[dev].Alram[1]+=1;
                         //短信报警
                     }
-                    if(timer_check(_Dd[dev].Data2AlarmTimer) && _Dd[dev].Alram[1]==0)
+                    if(timer_check(_Dd[dev].Data2AlarmTimer) && _Dd[dev].Alram[2]<_gc.SMSAlarmNum)
                     {
-                        _Dd[dev].Alram[1]=1;
-                        //短信报警
-                    }
-                    if(timer_check(_Dd[dev].Data3AlarmTimer) && _Dd[dev].Alram[2]==0)
-                    {
-                        _Dd[dev].Alram[2]=1;
-                        //短信报警
-                    }
-                    if(timer_check(_Dd[dev].Data4AlarmTimer) && _Dd[dev].Alram[3]==0)
-                    {
-                        _Dd[dev].Alram[3]=1;
+                        _Dd[dev].Alram[2]+=1;
                         //短信报警
                     }
                     dev++;
@@ -272,8 +254,6 @@ uint8_t Server_Receive()
                         memcpy(&(_Dd[dev].ID[0]),u3mbuf->pData,10);
                         memcpy(&(_Dd[dev].Data1),u3mbuf->pData+12,4);
                         memcpy(&(_Dd[dev].Data2),u3mbuf->pData+16,2);
-                        _Dd[dev].Data3=0;
-                        _Dd[dev].Data4=0;
                         ret=1;
                         break;
                     default:

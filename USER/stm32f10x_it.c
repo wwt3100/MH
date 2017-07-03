@@ -102,7 +102,8 @@ void USART1_IRQHandler (void)
 {
     __mbuf* buf = u1mbuf;
     uint8_t rtempdata;
-    static uint32_t head=0,tail=0;
+    static uint32_t head=0,head1=0,tail=0;
+    static uint16_t tail1=0;
     static uint16_t lenght=0;
     if(USART_GetFlagStatus(USART1,USART_IT_RXNE)==SET)
 	{
@@ -123,6 +124,31 @@ void USART1_IRQHandler (void)
             tail|=rtempdata;
             *(buf->pData+lenght++)=rtempdata;
             if(tail==0x297d7e04)
+            {
+                head=rtempdata;
+                buf->usable=1;
+                buf->datasize=lenght;
+                buf->pNext=(__mbuf*)CreateMbuf(248);
+                tail=0;
+                lenght=0;
+            }    
+        } 
+        if(head1 != 0x48544854)
+        {
+            head1<<=8;
+            head1|=rtempdata;
+        }
+        else
+        {
+            buf=gmbuf;
+            while(buf->pNext!=NULL)
+            {
+                buf=buf->pNext;
+            }
+            tail1<<=8;
+            tail1|=rtempdata;
+            *(buf->pData+lenght++)=rtempdata;
+            if(tail1==0x0d0a)
             {
                 head=rtempdata;
                 buf->usable=1;

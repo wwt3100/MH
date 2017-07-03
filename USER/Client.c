@@ -89,9 +89,36 @@ static void Client_Rx32Tx33()
 //
 static void Client_Rx34Tx35()
 {
+    static uint8_t sen;
     uint8_t i=0,Verify=0;
     uint8_t sendbuf[20]={0};
+    uint8_t num;
+    _DeviceConfig t_dc[4]={0};
+    sen=u1mbuf->pData[12];
+    num=u1mbuf->pData[13];
+    for(i=0;i<num;i++)
+    {
+        memcpy(t_dc[i].DeviceName,u1mbuf->pData+(50*i)+14,24);
+        memcpy(t_dc[i].ID,u1mbuf->pData+(50*i)+14+24,10);
+        memcpy(&t_dc[i].Data1Max,u1mbuf->pData+(50*i)+28+10,2);
+        memcpy(&t_dc[i].Data1Min,u1mbuf->pData+(50*i)+28+14,2);
+        memcpy(&t_dc[i].Data2Max,u1mbuf->pData+(50*i)+28+10,2);
+        memcpy(&t_dc[i].Data2Min,u1mbuf->pData+(50*i)+28+14,2);
+    }
+    STMFLASH_Write((uint32_t)&cDc[4*(sen-1)],(uint16_t*)t_dc,sizeof(_DeviceConfig)*num);
     
+    
+    memcpy(sendbuf,&WLP_HEAD,4);
+    memcpy(sendbuf+4,MHID,10);
+    sendbuf[14]=0x35;
+    sendbuf[15]=0x01;
+    for(i=4;i<15;i++)   //i=0  =>  i=4
+    {
+        Verify = Verify ^ (sendbuf[i]);
+    }
+    sendbuf[16]=Verify;
+    memcpy(sendbuf+16,&WLP_TAIL,4);
+    Usart1_SendData(sendbuf,21);
 }
 
 ///////////////////////////////////////////////////////////////
@@ -101,8 +128,18 @@ static void Client_Rx76Tx77()
 {
     uint8_t i=0,Verify=0;
     uint8_t sendbuf[20]={0};
+    uint8_t *AppData=u1mbuf->pData+12;
     
-    //to do
+    systmtime.tm_sec =*AppData++;
+    systmtime.tm_min =*AppData++;
+    systmtime.tm_hour=*AppData++;
+    systmtime.tm_mday=*AppData++;
+    systmtime.tm_mon =*AppData++;
+    systmtime.tm_year=(*AppData++)+2000;
+    RTC_Config();	  /* RTC Configuration */
+    RTC_SetCounter(mktimev(&systmtime));
+    RTC_WaitForLastTask();
+    BKP_WriteBackupRegister(BKP_DR1, 0xA5A5);
     
     memcpy(sendbuf,&WLP_HEAD,4);
     memcpy(sendbuf+4,MHID,10);
@@ -231,6 +268,21 @@ uint8_t Client_Receive()
                 break;
             case 0x32:
                 Client_Rx32Tx33(); //读取设置信息
+                break;
+            case 0x34:
+                Client_Rx34Tx35(); //配置仪器
+                break;
+            case 0x76:
+                Client_Rx76Tx77(); //时间同步
+                break;
+            case 0x5B:
+                Client_Rx5BTx5C(); //数据下载
+                break;
+            case 0x5D:
+                Client_Rx5DTx5E(); //报警记录下载
+                break;
+            case 0x72:
+                Client_Rx72Tx73(); //数据删除
                 break;
             default:
                 break;
