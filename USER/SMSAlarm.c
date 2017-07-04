@@ -8,6 +8,10 @@ extern _DeviceData _Dd[255];
 
 uint8_t *SMSAlarmMessage=0;
 
+extern volatile _GlobalConfig _gc;
+extern volatile _HostStat hstat;
+
+
 void SaveData2AlarmFile(uint8_t device,uint8_t phonenum,uint8_t type)
 {
     FATFS *fs;     /* Ponter to the filesystem object */
@@ -65,8 +69,46 @@ uint8_t SMSAlarm()
     return 0;
 }
 
-
-
+uint8_t SMSAlarmPress()
+{
+    static uint8_t dev=0;
+    if(timer_check((_Dd[dev].OfflineAlarmTimer)) && _Dd[dev].Alram[0]<_gc.SMSAlarmNum)
+    {
+        timer_init(&(_Dd[dev].OfflineAlarmTimer),_gc.OfflineAlarmInterval*60000);
+        _Dd[dev].Alram[0]+=1; //下线报警
+    }
+    if(_Dd[dev].Alram[0]>1 && _Dd[dev].OfflineAlarmTimer==0)
+    {
+        _Dd[dev].Alram[0]=0;
+        // 设备上线恢复
+    }
+    if(timer_check((_Dd[dev].Data1AlarmTimer)) && _Dd[dev].Alram[1]<_gc.SMSAlarmNum)
+    {
+        timer_init(&_Dd[dev].Data1AlarmTimer,_gc.AlarmIntervalTime*60000);
+        _Dd[dev].Alram[1]+=1; //超限报警
+    }
+    if(_Dd[dev].Alram[1]>1 && _Dd[dev].Data1AlarmTimer==0)
+    {
+        _Dd[dev].Alram[1]=0;
+        //超限报警 解除
+    }
+    if(timer_check((_Dd[dev].Data2AlarmTimer)) && _Dd[dev].Alram[2]<_gc.SMSAlarmNum)
+    {
+        timer_init(&_Dd[dev].Data2AlarmTimer,_gc.AlarmIntervalTime*60000);
+        _Dd[dev].Alram[2]+=1; //超限报警
+    }
+    if(_Dd[dev].Alram[2]>1 && _Dd[dev].Data2AlarmTimer==0)
+    {
+        _Dd[dev].Alram[2]=0;
+        //超限报警 解除
+    }
+    
+    
+    if(_gc.MonitorDeviceNum<=++dev)
+    {
+        dev=0;
+    }
+}
 
 
 

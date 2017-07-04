@@ -28,9 +28,9 @@ uint32_t Led1Timer=0,Led2Timer=0,Led3Timer=0;
 //uint32_t SMSAlarmTimer=1;
 volatile _HostStat hstat;
 volatile _GlobalConfig _gc;
-const _GlobalConfig c_gc;////__attribute__((at(0x08008000)));
+const _GlobalConfig c_gc __attribute__((at(0x08010000)));
 
-const _DeviceConfig cDc[255]__attribute__((at(0x08009000)))={0};
+const _DeviceConfig cDc[255] __attribute__((at(0x08011000)))={0};
 const char MHID[12]={"MH6001A001"};//__attribute__((at(0x08008000)))={"MH6001A001"};
 _DeviceData _Dd[255]={0};
 extern uint8_t *SMSAlarmMessage;
@@ -60,9 +60,9 @@ int main(void)
     unsigned long fre_clust,freespace;//,total;
     FRESULT fres;
     FATFS *fs;
-    _DeviceConfig dc;
-    strcpy((char*)dc.ID,"HS500BS657");
-    _gc.MonitorDeviceNum=1;
+    
+    memcpy(&_gc,&c_gc,sizeof(_GlobalConfig));
+    //_gc.MonitorDeviceNum=1;
     _gc.SamplingInterval=10;
     _gc.RetryInterval=11;
     
@@ -105,23 +105,28 @@ int main(void)
         hstat.SDCardStat=0;
     }
     free(fs);
-    timer_init(&Led3Timer,500);
+    //timer_init(&Led3Timer,500);
+    LED2(1);
 	while(1)
 	{
+        if(hstat.SDCardStat!=1)
+        {
+            timer_init(&Led1Timer,500);
+        }
+        else
+        {
+            Led1Timer=0;
+        }
         if(Server_Process()==e_Stat_Idle)
         {
-//            if(timer_check(SMSAlarmTimer))
-//            {
-//                SMSAlarm();     //短信报警
-//            }
-
+            SMSAlarmPress();     //短信报警
         }
         Client_Receive();
-        if(timer_check(Led3Timer))
+        if(timer_check(Led1Timer))
         {
-            timer_init(&Led3Timer,2000);
+            timer_init(&Led1Timer,2000);
             (l==0)?(l=1):(l=0);
-            LED3(l);
+            LED1(l);
         }
         
 	} 

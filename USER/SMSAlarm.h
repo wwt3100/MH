@@ -10,13 +10,13 @@
 #include <string.h>
 #include "sdio_sdcard.h"
 #include "rtc.h"
-
+#include "SysTick.h"
 
 
 
 
 uint8_t SMSAlarm(void);
-
+uint8_t SMSAlarmPress(void);
 
 
 

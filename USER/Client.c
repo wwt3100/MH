@@ -30,18 +30,18 @@ extern __mbuf *u1mbuf,*u2mbuf,*u3mbuf,*gmbuf;
 extern struct rtc_time systmtime;
 
 extern volatile _GlobalConfig _gc;
-extern const _GlobalConfig c_gc;
+extern _GlobalConfig c_gc;
 extern _HostStat hstat;
 
 extern const char MHID[12];
 
 ///////////////////////////////////////////////////////////////
-// 设置命令
+// 设置命令 Check OK
 //
 static void Client_Rx30Tx31()
 {
     uint8_t i=0,Verify=0;
-    uint8_t sendbuf[20]={0};
+    uint8_t sendbuf[25]={0};
     memcpy((uint8_t*)_gc.PhoneNumber1,u1mbuf->pData+12,88);
     STMFLASH_Write((uint32_t)&c_gc,(uint16_t*)&_gc,sizeof(_GlobalConfig));
     memcpy(sendbuf,&WLP_HEAD,4);
@@ -53,7 +53,7 @@ static void Client_Rx30Tx31()
         Verify = Verify ^ (sendbuf[i]);
     }
     sendbuf[16]=Verify;
-    memcpy(sendbuf+16,&WLP_TAIL,4);
+    memcpy(sendbuf+17,&WLP_TAIL,4);
     Usart1_SendData(sendbuf,21);
 }
 
@@ -81,29 +81,39 @@ static void Client_Rx32Tx33()
         Verify = Verify ^ (sendbuf[i]);
     }
     sendbuf[16+89]=Verify;
-    memcpy(sendbuf+16+89,&WLP_TAIL,4);
+    memcpy(sendbuf+16+89+1,&WLP_TAIL,4);
     Usart1_SendData(sendbuf,21);
 }
 ///////////////////////////////////////////////////////////////
-// 配置仪器
+// 配置仪器 Check OK
 //
 static void Client_Rx34Tx35()
 {
     static uint8_t sen;
+    int16_t t16;
     uint8_t i=0,Verify=0;
-    uint8_t sendbuf[20]={0};
+    uint8_t sendbuf[25]={0};
     uint8_t num;
     _DeviceConfig t_dc[4]={0};
-    sen=u1mbuf->pData[12];
-    num=u1mbuf->pData[13];
+    sen=u1mbuf->pData[13];
+    num=u1mbuf->pData[14];
+    if(u1mbuf->pData[12]==sen)
+    {
+        _gc.MonitorDeviceNum=((sen-1)*4)+num;
+        STMFLASH_Write((uint32_t)&c_gc,(uint16_t*)&_gc,sizeof(_GlobalConfig));
+    }
     for(i=0;i<num;i++)
     {
-        memcpy(t_dc[i].DeviceName,u1mbuf->pData+(50*i)+14,24);
-        memcpy(t_dc[i].ID,u1mbuf->pData+(50*i)+14+24,10);
-        memcpy(&t_dc[i].Data1Max,u1mbuf->pData+(50*i)+28+10,2);
-        memcpy(&t_dc[i].Data1Min,u1mbuf->pData+(50*i)+28+14,2);
-        memcpy(&t_dc[i].Data2Max,u1mbuf->pData+(50*i)+28+10,2);
-        memcpy(&t_dc[i].Data2Min,u1mbuf->pData+(50*i)+28+14,2);
+        memcpy(t_dc[i].DeviceName,u1mbuf->pData+(48*i)+15,24);
+        memcpy(t_dc[i].ID,u1mbuf->pData+(48*i)+15+24,10);
+        memcpy(&t16,u1mbuf->pData+(48*i)+39+10,2);
+        t_dc[i].Data1Max=t16;
+        memcpy(&t16,u1mbuf->pData+(48*i)+39+12,2);
+        t_dc[i].Data1Min=t16;
+        memcpy(&t16,u1mbuf->pData+(48*i)+39+14,2);
+        t_dc[i].Data2Max=t16;
+        memcpy(&t16,u1mbuf->pData+(48*i)+39+16,2);
+        t_dc[i].Data2Min=t16;
     }
     STMFLASH_Write((uint32_t)&cDc[4*(sen-1)],(uint16_t*)t_dc,sizeof(_DeviceConfig)*num);
     
@@ -117,17 +127,17 @@ static void Client_Rx34Tx35()
         Verify = Verify ^ (sendbuf[i]);
     }
     sendbuf[16]=Verify;
-    memcpy(sendbuf+16,&WLP_TAIL,4);
+    memcpy(sendbuf+17,&WLP_TAIL,4);
     Usart1_SendData(sendbuf,21);
 }
 
 ///////////////////////////////////////////////////////////////
-// 时间同步
+// 时间同步   Check OK
 //
 static void Client_Rx76Tx77()
 {
     uint8_t i=0,Verify=0;
-    uint8_t sendbuf[20]={0};
+    uint8_t sendbuf[25]={0};
     uint8_t *AppData=u1mbuf->pData+12;
     
     systmtime.tm_sec =*AppData++;
@@ -150,31 +160,80 @@ static void Client_Rx76Tx77()
         Verify = Verify ^ (sendbuf[i]);
     }
     sendbuf[16]=Verify;
-    memcpy(sendbuf+16,&WLP_TAIL,4);
+    memcpy(sendbuf+17,&WLP_TAIL,4);
     Usart1_SendData(sendbuf,21);
 }
 
 ///////////////////////////////////////////////////////////////
 // 数据下载
 //
-static void Client_Rx5BTx5C()
+static void Client_Rx78Tx79()
 {
+    FATFS *fs;     /* Ponter to the filesystem object */
+    FRESULT fres=FR_NOT_READY;
+    FIL fp;
     uint8_t i=0,Verify=0;
     uint8_t *sendbuf;
-    uint32_t num,savenum;
-    FSIZE_t size;
+    uint32_t num,savenum=0;
+    uint32_t allpack=0;
+    static uint32_t loclpack;
+    FSIZE_t size=0;
     sendbuf=malloc(248);
-    memcpy(sendbuf,u1mbuf->pData+11,4);
-    ReadTempFileSize(&size);
-    savenum=size/18;
-    
-    
+    memcpy(&loclpack,u1mbuf->pData+11,4);
+    memcpy(sendbuf,&WLP_HEAD,4);
+    memcpy(sendbuf+4,MHID,10);
+    sendbuf[14]=0x79;
+    sendbuf[15]=0x00;
+    if(SD_CardIsInserted())
+    {
+        fs = malloc(sizeof (FATFS));
+        fres=f_mount(fs, "0:", 0);
+        if(fres==FR_OK)
+        {
+            fres=f_open(&fp,".Tempdata",FA_OPEN_EXISTING);
+            switch(fres)
+            {
+                case FR_OK:
+                    size=f_size(&fp);
+                    savenum=size/18;
+                    break;
+                default:
+                    break;
+            }
+            allpack=savenum/10;
+            if(savenum%10!=0)
+            {
+                allpack++;
+            }
+            
+            f_lseek(&fp,(loclpack-1)*18);
+            f_read(&fp,sendbuf+21,180,&savenum);
+            sendbuf[20]=savenum/10;
+            
+            f_mount(0,"0:",0);
+        }
+        if(savenum!=0)
+        {
+            sendbuf[15]=0x01;
+        }
+        free(fs);
+    }
+    memcpy(sendbuf+16,&allpack,4);
+    memcpy(sendbuf+20,&loclpack,4);
+    for(i=4;i<10+2+8+1+savenum;i++)   //i=0  =>  i=4
+    {
+        Verify = Verify ^ (sendbuf[i]);
+    }
+    sendbuf[14+2+8+1+savenum+1]=Verify;
+    memcpy(sendbuf+14+2+8+1+savenum+2,&WLP_TAIL,4);
+    Usart1_SendData(sendbuf,14+2+8+1+savenum+2+4);
+    free(sendbuf);
 }
 
 ///////////////////////////////////////////////////////////////
 // 报警记录下载
 //
-static void Client_Rx5DTx5E()
+static void Client_Rx80Tx81()
 {
     uint8_t i=0,Verify=0;
     uint8_t *sendbuf;
@@ -240,13 +299,14 @@ static void Client_Rx72Tx73()
         Verify = Verify ^ (sendbuf[i]);
     }
     sendbuf[16]=Verify;
-    memcpy(sendbuf+16,&WLP_TAIL,4);
+    memcpy(sendbuf+17,&WLP_TAIL,4);
     Usart1_SendData(sendbuf,21);
 }
 
 uint8_t Client_Receive()
 {
-    uint8_t i=0,Verify=0x00;
+    uint16_t i=0;
+    uint8_t Verify=0x00;
     __mbuf* tb;
     uint8_t ret=0;
     if(u1mbuf->usable!=1)
@@ -259,7 +319,7 @@ uint8_t Client_Receive()
     {
         goto clientprocessend;
     }
-    if(memcmp(MHID,(u1mbuf->pData),10)==0)//序列号相同    //如果是发给管理主机的信息
+    if(memcmp(MHID,(u1mbuf->pData),10)==0 || u1mbuf->pData[0]==0)//序列号相同    //如果是发给管理主机的信息
     {
         switch(*(u1mbuf->pData+10))
         {
@@ -275,11 +335,11 @@ uint8_t Client_Receive()
             case 0x76:
                 Client_Rx76Tx77(); //时间同步
                 break;
-            case 0x5B:
-                Client_Rx5BTx5C(); //数据下载
+            case 0x78:
+                Client_Rx78Tx79(); //数据下载
                 break;
-            case 0x5D:
-                Client_Rx5DTx5E(); //报警记录下载
+            case 0x80:
+                Client_Rx80Tx81(); //报警记录下载
                 break;
             case 0x72:
                 Client_Rx72Tx73(); //数据删除
@@ -288,17 +348,17 @@ uint8_t Client_Receive()
                 break;
         }
     }
-    else if(u1mbuf->pData[0]==0)  //序列号为0 重新写序列号
-    {
-        switch(*(u1mbuf->pData+10))
-        {
-            case 0xCC:
+//    else if(u1mbuf->pData[0]==0)  //序列号为0 重新写序列号
+//    {
+//        switch(*(u1mbuf->pData+10))
+//        {
+//            case 0xCC:
 
-                break;
-            default:
-                break;
-        }
-    }
+//                break;
+//            default:
+//                break;
+//        }
+//    }
     else //发给其他设备的信息
     {
         hstat.ClientStat=CST_ClientHasData;

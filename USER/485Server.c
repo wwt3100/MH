@@ -57,18 +57,14 @@ uint8_t Server_Process()
             {
                 timer_init(&timeout,_gc.RetryInterval*100);
                 stat=e_Stat_SampleingWait;
-                //Server_Send67((cDc[dev].ID));
-                Server_Send67("HS500BS657"); //for test
+                Server_Send67((cDc[dev].ID));
+                //Server_Send67("HS500BS657"); //for test
                 if(resend++>=2)  //如果发送3次没有收到回复
                 {
                     
                     if(_Dd[dev].Alram[0]==0)
                     {
                         timer_init(&(_Dd[dev].OfflineAlarmTimer),_gc.OfflineAlarmInterval*60000);
-                    }
-                    if(timer_check((_Dd[dev].OfflineAlarmTimer)) && _Dd[dev].Alram[0]<_gc.SMSAlarmNum)
-                    {
-                        _Dd[dev].Alram[0]+=1; //下线报警
                     }
                     dev++;
                     resend=0;
@@ -79,24 +75,20 @@ uint8_t Server_Process()
                         stat=e_Stat_Idle;
                     }
                 }
-            }
+            }                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  
             break;
         case e_Stat_SampleingWait:
             if(Server_Receive()==1)
             {
-                if(strcmp(((cDc[dev]).ID),"HS500BS657"))  //for test
-                //if(memcmp(_Dd[dev].ID,(cDc[dev].ID),10)==0) //接收采集数据的信息
+                //if(strcmp(((cDc[dev]).ID),"HS500BS657"))  //for test
+                if(memcmp(_Dd[dev].ID,(cDc[dev].ID),10)==0) //接收采集数据的信息
                 {
                     //SaveData2RecodeFile(&cDc[device]);
                     SaveData2RecodeFile(&_Dd[dev]); 
                     SaveData2TempFile(&_Dd[dev]);
                     
                     _Dd[dev].OfflineAlarmTimer=0; 
-                    if(_Dd[dev].Alram[0]==1)
-                    {
-                        _Dd[dev].Alram[0]=0;
-                        // 设备上线恢复
-                    }
+                    
                     if(_Dd[dev].Data1>cDc[dev].Data1Max || _Dd[dev].Data1<cDc[dev].Data1Min)
                     {
                         timer_init(&_Dd[dev].Data1AlarmTimer,_gc.AlarmIntervalTime*1000);
@@ -104,10 +96,6 @@ uint8_t Server_Process()
                     else
                     {
                         _Dd[dev].Data1AlarmTimer=0;
-                        if(_Dd[dev].Alram[0]!=0)
-                        {
-                            //短信报警解除
-                        }
                     }
                     if(_Dd[dev].Data2>cDc[dev].Data2Max || _Dd[dev].Data2<cDc[dev].Data2Min)
                     {
@@ -116,20 +104,6 @@ uint8_t Server_Process()
                     else
                     {
                         _Dd[dev].Data2AlarmTimer=0;
-                        if(_Dd[dev].Alram[1]!=0)
-                        {
-                            //短信报警解除
-                        }
-                    }
-                    if(timer_check(_Dd[dev].Data1AlarmTimer) && _Dd[dev].Alram[1]<_gc.SMSAlarmNum)
-                    {
-                        _Dd[dev].Alram[1]+=1;
-                        //短信报警
-                    }
-                    if(timer_check(_Dd[dev].Data2AlarmTimer) && _Dd[dev].Alram[2]<_gc.SMSAlarmNum)
-                    {
-                        _Dd[dev].Alram[2]+=1;
-                        //短信报警
                     }
                     dev++;
                     resend=0;
@@ -231,7 +205,8 @@ void Server_Send67(uint8_t *pID)
 }
 uint8_t Server_Receive()
 {
-    uint8_t i=0,Verify=0x00;
+    uint16_t i=0;
+    uint8_t Verify=0x00;
     __mbuf* tb;
     uint8_t ret=0;
     if(u3mbuf->usable!=1)
