@@ -10,6 +10,8 @@
 #define	days_in_year(a) 	(leapyear(a) ? 366 : 365)
 #define	days_in_month(a) 	(month_days[(a) - 1])
 
+#define RTC_CONVERT_BCD2BIN(__VALUE__) (uint8_t)(((uint8_t)((__VALUE__) & (uint8_t)0xF0U) >> (uint8_t)0x4U) * 10U + ((__VALUE__) & (uint8_t)0x0FU))
+
 struct rtc_time 
 {
 	int tm_sec;
@@ -37,7 +39,8 @@ uint8_t USART_Scanf(uint32_t value);
 
 void GregorianDay(struct rtc_time * tm);
 void to_tm(uint32_t tim, struct rtc_time * tm);
-uint32_t mktimev(struct rtc_time *tm);
+uint32_t mktimev(struct rtc_time tm);
+u8 RTC_Set(struct rtc_time *tm);
 
 u32 TimeCompress(uint8_t *time);
 

@@ -103,6 +103,7 @@ FRESULT ReadTempFileSize(FSIZE_t *size)
                 default:
                     break;
             }
+            f_close(&fp);
             f_mount(0,"0:",0);
         }
         free(fs);

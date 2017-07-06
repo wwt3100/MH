@@ -40,7 +40,7 @@ extern struct rtc_time systmtime;
 static void gpio_init(void)
 {
     GPIO_InitTypeDef  GPIO_InitStructure;
- 	
+ 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD, ENABLE);	 //使能PB端口时钟
 	
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8;				 
@@ -49,9 +49,14 @@ static void gpio_init(void)
     GPIO_Init(GPIOD, &GPIO_InitStructure);					 //根据设定参数初始化GPIOD.8
     GPIO_ResetBits(GPIOD,GPIO_Pin_8);						//485CTR
     
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4;
+    GPIO_Init(GPIOA, &GPIO_InitStructure);	
+    GPIO_ResetBits(GPIOA,GPIO_Pin_4);
+    
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);
     GPIO_Init(GPIOC, &GPIO_InitStructure);					 //根据设定参数初始化GPIOD.8
     GPIO_SetBits(GPIOC,GPIO_Pin_6);
+    
 }
 
 int main(void)
@@ -63,7 +68,7 @@ int main(void)
     
     memcpy(&_gc,&c_gc,sizeof(_GlobalConfig));
     //_gc.MonitorDeviceNum=1;
-    _gc.SamplingInterval=10;
+    //_gc.SamplingInterval=10;
     _gc.RetryInterval=11;
     
     
@@ -117,7 +122,8 @@ int main(void)
         {
             Led1Timer=0;
         }
-        if(Server_Process()==e_Stat_Idle)
+        Server_Process();
+        //if(Server_Process()==e_Stat_Idle)
         {
             SMSAlarmPress();     //短信报警
         }

@@ -91,19 +91,74 @@ void NVIC_Config(void)
  * machines were long is 32-bit! (However, as time_t is signed, we
  * will already get problems at other places on 2038-01-19 03:14:08)
  */
-u32 mktimev(struct rtc_time *tm)
+u32 mktimev(struct rtc_time tm)
 {
-	if (0 >= (int) (tm->tm_mon -= 2)) 
+	if (0 >= (int) (tm.tm_mon -= 2)) 
 	{	/* 1..12 -> 11,12,1..10 */
-		tm->tm_mon += 12;		/* Puts Feb last since it has leap day */
-		tm->tm_year -= 1;
+		tm.tm_mon += 12;		/* Puts Feb last since it has leap day */
+		tm.tm_year -= 1;
 	}
 
 	return 
-	((((u32) (tm->tm_year/4 - tm->tm_year/100 + tm->tm_year/400 + 367*tm->tm_mon/12 + tm->tm_mday) + tm->tm_year*365 - 730456  //719499	
-	    )*24 + tm->tm_hour /* now have hours */
-	  )*60 + tm->tm_min /* now have minutes */
-	)*60 + tm->tm_sec; /* finally seconds */
+	((((u32) (tm.tm_year/4 - tm.tm_year/100 + tm.tm_year/400 + 367*tm.tm_mon/12 + tm.tm_mday) + tm.tm_year*365 - 730456  //719499	
+	    )*24 + tm.tm_hour /* now have hours */
+	  )*60 + tm.tm_min /* now have minutes */
+	)*60 + tm.tm_sec; /* finally seconds */
+}
+//判断是否是闰年函数
+//月份   1  2  3  4  5  6  7  8  9  10 11 12
+//闰年   31 29 31 30 31 30 31 31 30 31 30 31
+//非闰年 31 28 31 30 31 30 31 31 30 31 30 31
+//输入:年份
+//输出:该年份是不是闰年.1,是.0,不是
+u8 Is_Leap_Year(u16 year)
+{			  
+	if(year%4==0) //必须能被4整除
+	{ 
+		if(year%100==0) 
+		{ 
+			if(year%400==0)return 1;//如果以00结尾,还要能被400整除 	   
+			else return 0;   
+		}else return 1;   
+	}else return 0;	
+}	 			   
+//设置时钟
+//把输入的时钟转换为秒钟
+//以1970年1月1日为基准
+//1970~2099年为合法年份
+//返回值:0,成功;其他:错误代码.
+//月份数据表											 
+u8 const table_week[12]={0,3,3,6,1,4,6,2,5,0,3,5}; //月修正数据表	  
+//平年的月份日期表
+const u8 mon_table[12]={31,28,31,30,31,30,31,31,30,31,30,31};
+u8 RTC_Set(struct rtc_time *tm)
+{
+	u16 t;
+	u32 seccount=0;
+	if(tm->tm_year<1970||tm->tm_year>2099)return 1;	   
+	for(t=1970;t<tm->tm_year;t++)	//把所有年份的秒钟相加
+	{
+		if(Is_Leap_Year(t))seccount+=31622400;//闰年的秒钟数
+		else seccount+=31536000;			  //平年的秒钟数
+	}
+	tm->tm_mon-=1;
+	for(t=0;t<tm->tm_mon;t++)	   //把前面月份的秒钟数相加
+	{
+		seccount+=(u32)mon_table[t]*86400;//月份秒钟数相加
+		if(Is_Leap_Year(tm->tm_year)&&t==1)seccount+=86400;//闰年2月份增加一天的秒钟数	   
+	}
+	seccount+=(u32)(tm->tm_mday)*86400;//seccount+=(u32)(tm->tm_mday-1)*86400;//把前面日期的秒钟数相加 
+	seccount+=(u32)tm->tm_hour*3600;//小时秒钟数
+    seccount+=(u32)tm->tm_min*60;	 //分钟秒钟数
+	seccount+=tm->tm_sec;//最后的秒钟加上去
+
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_PWR | RCC_APB1Periph_BKP, ENABLE);	//使能PWR和BKP外设时钟  
+	PWR_BackupAccessCmd(ENABLE);	//使能RTC和后备寄存器访问 
+	RTC_SetCounter(seccount);	//设置RTC计数器的值
+	RTC_WaitForLastTask();	//等待最近一次对RTC寄存器的写操作完成  	
+    BKP_WriteBackupRegister(BKP_DR1, 0xA5A5);
+    
+	return 0;	    
 }
  /*******************************************************************************
  * 函数名：to_tm
@@ -152,7 +207,7 @@ void to_tm(u32 tim, struct rtc_time * tm)
 
  /*******************************************************************************
  * 函数名：GregorianDay
- * 描述  ：计算公历	 This only works for the Gregorian calendar - i.e. after 1752 (in the UK)
+ * 描述  ：计算公历	 This only works for the Gregorian calendar - i.e. after 1752 (in the UK)to_tm(RTC_GetCounter(), &systmtime);
  * 输入  ：无
  * 输出  ：无
  *******************************************************************************/

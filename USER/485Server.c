@@ -40,7 +40,7 @@ volatile uint8_t stat=0,resend=0,dev=0;
 uint32_t timeout=0,PCmsgtimeout=0;
 uint32_t SamplingIntervalTimer=1;
 extern uint8_t *SMSAlarmMessage;
-
+uint8_t MustSave=0;
 uint8_t Server_Process()
 {
     __mbuf* tb;
@@ -71,7 +71,7 @@ uint8_t Server_Process()
                     if(_gc.MonitorDeviceNum<=dev)
                     {
                         dev=0;
-                        timer_init(&SamplingIntervalTimer,_gc.SamplingInterval*1000); //设置采样间隔
+                        //timer_init(&SamplingIntervalTimer,_gc.SamplingInterval*1000); //设置采样间隔
                         stat=e_Stat_Idle;
                     }
                 }
@@ -91,7 +91,8 @@ uint8_t Server_Process()
                     
                     if(_Dd[dev].Data1>cDc[dev].Data1Max || _Dd[dev].Data1<cDc[dev].Data1Min)
                     {
-                        timer_init(&_Dd[dev].Data1AlarmTimer,_gc.AlarmIntervalTime*1000);
+                        if(_Dd[dev].Data1AlarmTimer==0)
+                            timer_init(&_Dd[dev].Data1AlarmTimer,_gc.AlarmIntervalTime*60000);
                     }
                     else
                     {
@@ -99,12 +100,18 @@ uint8_t Server_Process()
                     }
                     if(_Dd[dev].Data2>cDc[dev].Data2Max || _Dd[dev].Data2<cDc[dev].Data2Min)
                     {
-                        timer_init(&_Dd[dev].Data2AlarmTimer,_gc.AlarmIntervalTime*1000);
+                        if(_Dd[dev].Data2AlarmTimer==0)
+                            timer_init(&_Dd[dev].Data2AlarmTimer,_gc.AlarmIntervalTime*60000);
                     }
                     else
                     {
                         _Dd[dev].Data2AlarmTimer=0;
                     }
+//                    if(timer_check((_Dd[dev].Data1AlarmTimer)) || timer_check((_Dd[dev].Data2AlarmTimer)) || MustSave==1)  //超限 保存时间和采集时间一样
+//                    {
+//                        SaveData2RecodeFile(&_Dd[dev]); 
+//                        SaveData2TempFile(&_Dd[dev]);
+//                    }
                     dev++;
                     resend=0;
                     stat=e_Stat_Sampling;
@@ -118,7 +125,7 @@ uint8_t Server_Process()
             if(_gc.MonitorDeviceNum<=dev)
             {
                 dev=0;
-                timer_init(&SamplingIntervalTimer,_gc.SamplingInterval*1000); //设置采样间隔
+                //timer_init(&SamplingIntervalTimer,_gc.SamplingInterval*1000); //设置采样间隔
                 stat=e_Stat_Idle;
             }
             else

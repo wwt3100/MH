@@ -35,6 +35,7 @@ extern _HostStat hstat;
 
 extern const char MHID[12];
 
+extern uint32_t SamplingIntervalTimer;
 ///////////////////////////////////////////////////////////////
 // 设置命令 Check OK
 //
@@ -58,11 +59,12 @@ static void Client_Rx30Tx31()
 }
 
 ///////////////////////////////////////////////////////////////
-// 读取设置信息
+// 读取设置信息 Check OK
 //
 static void Client_Rx32Tx33()
 {
-    uint8_t i=0,Verify=0;
+    uint16_t i=0;
+    uint8_t Verify=0;
     uint8_t *sendbuf;
     uint32_t num;
     FSIZE_t size;
@@ -72,17 +74,17 @@ static void Client_Rx32Tx33()
     memcpy(sendbuf+4,MHID,10);
     sendbuf[14]=0x33;
     sendbuf[15]=0x01;
-    memcpy(sendbuf+15,(uint8_t*)_gc.PhoneNumber1,89);
+    memcpy(sendbuf+16,(uint8_t*)_gc.PhoneNumber1,89);
     ReadTempFileSize(&size);
     num=size/18;
-    memcpy(sendbuf+15+89,&num,4);
-    for(i=4;i<15+89;i++)   //i=0  =>  i=4
+    memcpy(sendbuf+16+89,&num,4);
+    for(i=4;i<16+89+4;i++)   //i=0  =>  i=4
     {
         Verify = Verify ^ (sendbuf[i]);
     }
-    sendbuf[16+89]=Verify;
-    memcpy(sendbuf+16+89+1,&WLP_TAIL,4);
-    Usart1_SendData(sendbuf,21);
+    sendbuf[16+89+4]=Verify;
+    memcpy(sendbuf+16+89+4+1,&WLP_TAIL,4);
+    Usart1_SendData(sendbuf,16+89+1+4+4);
 }
 ///////////////////////////////////////////////////////////////
 // 配置仪器 Check OK
@@ -129,32 +131,58 @@ static void Client_Rx34Tx35()
     sendbuf[16]=Verify;
     memcpy(sendbuf+17,&WLP_TAIL,4);
     Usart1_SendData(sendbuf,21);
+    SamplingIntervalTimer=1;//开始采集
 }
 
 ///////////////////////////////////////////////////////////////
 // 时间同步   Check OK
+//
+// add fix BCD -> Hex
 //
 static void Client_Rx76Tx77()
 {
     uint8_t i=0,Verify=0;
     uint8_t sendbuf[25]={0};
     uint8_t *AppData=u1mbuf->pData+12;
-    
-    systmtime.tm_sec =*AppData++;
-    systmtime.tm_min =*AppData++;
-    systmtime.tm_hour=*AppData++;
-    systmtime.tm_mday=*AppData++;
-    systmtime.tm_mon =*AppData++;
-    systmtime.tm_year=(*AppData++)+2000;
+    int16_t checktime=0;
+    checktime+=systmtime.tm_min;
+    checktime+=systmtime.tm_hour;
+    checktime+=systmtime.tm_mday;
+    checktime+=systmtime.tm_mon;
+    checktime+=systmtime.tm_year;
+    systmtime.tm_sec =RTC_CONVERT_BCD2BIN(*AppData);
+    AppData++;
+    systmtime.tm_min =RTC_CONVERT_BCD2BIN(*AppData);
+    AppData++;
+    systmtime.tm_hour=RTC_CONVERT_BCD2BIN(*AppData);
+    AppData++;
+    systmtime.tm_mday=RTC_CONVERT_BCD2BIN(*AppData);
+    AppData++;
+    systmtime.tm_mon =RTC_CONVERT_BCD2BIN(*AppData);
+    AppData+=2;
+    systmtime.tm_year=RTC_CONVERT_BCD2BIN(*AppData)+2000;
     RTC_Config();	  /* RTC Configuration */
-    RTC_SetCounter(mktimev(&systmtime));
+    RTC_SetCounter(mktimev(systmtime));
     RTC_WaitForLastTask();
     BKP_WriteBackupRegister(BKP_DR1, 0xA5A5);
-    
+    to_tm(RTC_GetCounter(), &systmtime);
+    checktime-=systmtime.tm_min;
+    checktime-=systmtime.tm_hour;
+    checktime-=systmtime.tm_mday;
+    checktime-=systmtime.tm_mon;
+    checktime-=systmtime.tm_year;
+    if(abs(checktime)<3)
+    {
+        sendbuf[15]=0x01;
+    }
+    else
+    {
+        sendbuf[15]=0x00;
+    }
     memcpy(sendbuf,&WLP_HEAD,4);
     memcpy(sendbuf+4,MHID,10);
     sendbuf[14]=0x77;
-    sendbuf[15]=0x01;
+    //sendbuf[15]=0x01;
     for(i=4;i<15;i++)   //i=0  =>  i=4
     {
         Verify = Verify ^ (sendbuf[i]);
@@ -165,7 +193,7 @@ static void Client_Rx76Tx77()
 }
 
 ///////////////////////////////////////////////////////////////
-// 数据下载
+// 数据下载   Check OK
 //
 static void Client_Rx78Tx79()
 {
@@ -179,6 +207,7 @@ static void Client_Rx78Tx79()
     static uint32_t loclpack;
     FSIZE_t size=0;
     sendbuf=malloc(248);
+    memset(sendbuf,0,248);
     memcpy(&loclpack,u1mbuf->pData+11,4);
     memcpy(sendbuf,&WLP_HEAD,4);
     memcpy(sendbuf+4,MHID,10);
@@ -190,7 +219,7 @@ static void Client_Rx78Tx79()
         fres=f_mount(fs, "0:", 0);
         if(fres==FR_OK)
         {
-            fres=f_open(&fp,".Tempdata",FA_OPEN_EXISTING);
+            fres=f_open(&fp,".Tempdata",FA_OPEN_EXISTING | FA_WRITE | FA_READ);
             switch(fres)
             {
                 case FR_OK:
@@ -207,26 +236,29 @@ static void Client_Rx78Tx79()
             }
             
             f_lseek(&fp,(loclpack-1)*18);
-            f_read(&fp,sendbuf+21,180,&savenum);
-            sendbuf[20]=savenum/10;
+            f_read(&fp,sendbuf+25,180,&savenum);
+            sendbuf[24]=savenum/18;  //包中数据数量 重复利用savenum内存
             
+            
+            f_close(&fp);
             f_mount(0,"0:",0);
         }
         if(savenum!=0)
         {
             sendbuf[15]=0x01;
         }
+        
         free(fs);
     }
     memcpy(sendbuf+16,&allpack,4);
     memcpy(sendbuf+20,&loclpack,4);
-    for(i=4;i<10+2+8+1+savenum;i++)   //i=0  =>  i=4
+    for(i=4;i<14+2+8+savenum+1;i++)   //i=0  =>  i=4
     {
         Verify = Verify ^ (sendbuf[i]);
     }
-    sendbuf[14+2+8+1+savenum+1]=Verify;
-    memcpy(sendbuf+14+2+8+1+savenum+2,&WLP_TAIL,4);
-    Usart1_SendData(sendbuf,14+2+8+1+savenum+2+4);
+    sendbuf[14+2+8+savenum+1]=Verify;
+    memcpy(sendbuf+14+2+8+savenum+2,&WLP_TAIL,4);
+    Usart1_SendData(sendbuf,14+2+8+savenum+2+4);
     free(sendbuf);
 }
 
@@ -244,11 +276,11 @@ static void Client_Rx80Tx81()
     ReadTempFileSize(&size);
     savenum=size/18;
     
-    
+    free(sendbuf);
 }
 
 ///////////////////////////////////////////////////////////////
-// 数据删除
+// 数据删除  Check OK
 //
 static void Client_Rx72Tx73()
 {
