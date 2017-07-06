@@ -116,7 +116,8 @@ void USART2_Init(uint32_t band)
 	USART_InitTypeDef USART_InitStructure;
 	NVIC_InitTypeDef NVIC_InitStructure;
 	/* config USART1 clock */
-	RCC_APB2PeriphClockCmd(RCC_APB1Periph_USART2 | RCC_APB2Periph_GPIOA, ENABLE);
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART2, ENABLE);
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
 
 	/* USART2 GPIO config */
     /* Configure USART2 Tx (PA.02) as alternate function push-pull */
@@ -148,6 +149,18 @@ void USART2_Init(uint32_t band)
    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
    NVIC_Init(&NVIC_InitStructure);
    u2mbuf=CreateMbuf(250);
+}
+void Usart2_SendData(uint8_t *buffer,uint16_t len)
+{  
+    uint16_t i;
+    if(len==17)
+        i=0;
+    USART_ClearFlag(USART2,USART_FLAG_TC);	
+    for(i=0;i<len;i++)
+    {
+        USART_SendData(USART2,*buffer++);	 
+        while(USART_GetFlagStatus(USART2, USART_FLAG_TC) == RESET ); 	
+    }
 }
 void USART3_Init(uint32_t band)
 {

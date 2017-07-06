@@ -10,5 +10,6 @@ void TimingDelay_Decrement(void);
 
 void timer_init(uint32_t* pnTimer, uint32_t nValue);
 uint32_t timer_check(uint32_t nTimer);
+uint32_t timer_check_nolimit(uint32_t nTimer);
 
 #endif /* __SYSTICK_H */

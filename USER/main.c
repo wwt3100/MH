@@ -80,6 +80,7 @@ int main(void)
     RTC_Init();
 	FLASH_Init();				//初始化W25Q128 
     USART1_Init(115200);	 	//串口初始化为115200
+    USART2_Init(115200);	 	//串口初始化为115200
     USART3_Init(19200);
 	SD_Init();
     if(SD_CardIsInserted())
@@ -122,11 +123,8 @@ int main(void)
         {
             Led1Timer=0;
         }
-        Server_Process();
-        //if(Server_Process()==e_Stat_Idle)
-        {
-            SMSAlarmPress();     //短信报警
-        }
+        Server_Process(); 
+        SMSAlarm_Process();     //短信报警
         Client_Receive();
         if(timer_check(Led1Timer))
         {

@@ -75,7 +75,7 @@ uint8_t Server_Process()
                         stat=e_Stat_Idle;
                     }
                 }
-            }                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  
+            }
             break;
         case e_Stat_SampleingWait:
             if(Server_Receive()==1)

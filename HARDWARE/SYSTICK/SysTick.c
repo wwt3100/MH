@@ -116,5 +116,15 @@ uint32_t timer_check(uint32_t nTimer)
         return 0;   // false
     }
 }
-
+uint32_t timer_check_nolimit(uint32_t nTimer)
+{
+    if ((int32_t)(g_tick_1ms - nTimer) >= 0)
+    {
+        return g_tick_1ms - nTimer;   // true
+    }
+    else
+    {
+        return 0;   // false
+    }
+}
 

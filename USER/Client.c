@@ -56,6 +56,7 @@ static void Client_Rx30Tx31()
     sendbuf[16]=Verify;
     memcpy(sendbuf+17,&WLP_TAIL,4);
     Usart1_SendData(sendbuf,21);
+    SamplingIntervalTimer=1;//开始采集
 }
 
 ///////////////////////////////////////////////////////////////
@@ -138,6 +139,8 @@ static void Client_Rx34Tx35()
 // 时间同步   Check OK
 //
 // add fix BCD -> Hex
+// fix bug systemtime day -2
+// add rtc time check
 //
 static void Client_Rx76Tx77()
 {
@@ -171,7 +174,7 @@ static void Client_Rx76Tx77()
     checktime-=systmtime.tm_mday;
     checktime-=systmtime.tm_mon;
     checktime-=systmtime.tm_year;
-    if(abs(checktime)<3)
+    if(abs(checktime)<3) //简单校验
     {
         sendbuf[15]=0x01;
     }
@@ -182,7 +185,6 @@ static void Client_Rx76Tx77()
     memcpy(sendbuf,&WLP_HEAD,4);
     memcpy(sendbuf+4,MHID,10);
     sendbuf[14]=0x77;
-    //sendbuf[15]=0x01;
     for(i=4;i<15;i++)   //i=0  =>  i=4
     {
         Verify = Verify ^ (sendbuf[i]);

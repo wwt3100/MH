@@ -16,7 +16,7 @@
 
 
 uint8_t SMSAlarm(void);
-uint8_t SMSAlarmPress(void);
+uint8_t SMSAlarm_Process(void);
 
 
 

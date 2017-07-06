@@ -70,56 +70,63 @@ uint8_t SMSAlarm()
 }
 uint32_t AlarmOn=0;
 static uint32_t AlarmBellTimer=0;
-uint8_t SMSAlarmPress()
+uint8_t SMSAlarm_Process()
 {
     uint8_t a=0;
     static uint8_t dev=0;
-    if(timer_check((_Dd[dev].OfflineAlarmTimer)) && _Dd[dev].Alram[0]<_gc.SMSAlarmNum)
+    if(_gc.OfflineAlarmONOFF)
     {
-        timer_init(&(_Dd[dev].OfflineAlarmTimer),_gc.OfflineAlarmInterval*60000);
-        _Dd[dev].Alram[0]+=1; //下线报警
-        if(_Dd[dev].Alram[0]==1)
+        if(timer_check_nolimit((_Dd[dev].OfflineAlarmTimer)) && _Dd[dev].Alram[0]<_gc.SMSAlarmNum)
         {
-            AlarmOn++;
+            timer_init(&(_Dd[dev].OfflineAlarmTimer),_gc.OfflineAlarmInterval*60000);
+            _Dd[dev].Alram[0]+=1; //下线报警
+            
+            if(_Dd[dev].Alram[0]==1)
+            {
+                AlarmOn++;
+            }
+        }
+        if(_Dd[dev].Alram[0]>1 && _Dd[dev].OfflineAlarmTimer==0)
+        {
+            _Dd[dev].Alram[0]=0;
+            // 设备上线恢复
+            AlarmOn--;
         }
     }
-    if(_Dd[dev].Alram[0]>1 && _Dd[dev].OfflineAlarmTimer==0)
+    if(_gc.OverLimitONOFF)
     {
-        _Dd[dev].Alram[0]=0;
-        // 设备上线恢复
-        AlarmOn--;
-    }
-    if(timer_check((_Dd[dev].Data1AlarmTimer)) && _Dd[dev].Alram[1]<_gc.SMSAlarmNum)
-    {
-        timer_init(&_Dd[dev].Data1AlarmTimer,_gc.AlarmIntervalTime*60000);
-        _Dd[dev].Alram[1]+=1; //超限报警
-        if(_Dd[dev].Alram[1]==1)
+        if(timer_check_nolimit((_Dd[dev].Data1AlarmTimer)) && _Dd[dev].Alram[1]<_gc.SMSAlarmNum)
         {
-            AlarmOn++;
+            timer_init(&_Dd[dev].Data1AlarmTimer,_gc.AlarmIntervalTime*60000);
+            _Dd[dev].Alram[1]+=1; //超限报警
+            Usart2_SendData("ZZZZZ#AT+SMSEND=\"18682093906\",3,\"测试\"\r\n",40);
+            if(_Dd[dev].Alram[1]==1)
+            {
+                AlarmOn++;
+            }
+        }
+        if(_Dd[dev].Alram[1]>1 && _Dd[dev].Data1AlarmTimer==0) //使用nolimit timer可能为零
+        {
+            _Dd[dev].Alram[1]=0;
+            AlarmOn--;
+            //超限报警 解除
+        }
+        if(timer_check_nolimit((_Dd[dev].Data2AlarmTimer)) && _Dd[dev].Alram[2]<_gc.SMSAlarmNum)
+        {
+            timer_init(&_Dd[dev].Data2AlarmTimer,_gc.AlarmIntervalTime*60000);
+            _Dd[dev].Alram[2]+=1; //超限报警
+            if(_Dd[dev].Alram[2]==1)
+            {
+                AlarmOn++;
+            }
+        }
+        if(_Dd[dev].Alram[2]>1 && _Dd[dev].Data2AlarmTimer==0)
+        {
+            _Dd[dev].Alram[2]=0;
+            AlarmOn--;
+            //超限报警 解除
         }
     }
-    if(_Dd[dev].Alram[1]>1 && _Dd[dev].Data1AlarmTimer==0)
-    {
-        _Dd[dev].Alram[1]=0;
-        AlarmOn--;
-        //超限报警 解除
-    }
-    if(timer_check((_Dd[dev].Data2AlarmTimer)) && _Dd[dev].Alram[2]<_gc.SMSAlarmNum)
-    {
-        timer_init(&_Dd[dev].Data2AlarmTimer,_gc.AlarmIntervalTime*60000);
-        _Dd[dev].Alram[2]+=1; //超限报警
-        if(_Dd[dev].Alram[2]==1)
-        {
-            AlarmOn++;
-        }
-    }
-    if(_Dd[dev].Alram[2]>1 && _Dd[dev].Data2AlarmTimer==0)
-    {
-        _Dd[dev].Alram[2]=0;
-        AlarmOn--;
-        //超限报警 解除
-    }
-    
     if(_gc.AlarmONOFF==1 && AlarmOn>0)
     {
         LED3(1);
@@ -135,7 +142,7 @@ uint8_t SMSAlarmPress()
         AlarmBellTimer=0;
     }
     
-    if(timer_check(AlarmBellTimer)) //蜂鸣器间隔响
+    if(timer_check_nolimit(AlarmBellTimer)) //蜂鸣器间隔响
     {
         timer_init(&AlarmBellTimer,1000);
         a=GPIO_ReadInputDataBit(GPIOA,GPIO_Pin_4);
