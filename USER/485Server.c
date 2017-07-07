@@ -194,8 +194,8 @@ void Server_Send67(uint8_t *pID)
 {
     uint8_t *Sendbuff,Verify=0,i=0;
     
-    Sendbuff=malloc(248);
-    memset(Sendbuff,0,248);
+    Sendbuff=malloc(252);
+    memset(Sendbuff,0,252);
     memcpy(Sendbuff,&WLP_HEAD,4);
     memcpy(Sendbuff+4,pID,10);
     Sendbuff[14]=0x67;

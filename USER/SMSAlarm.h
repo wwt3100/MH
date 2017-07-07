@@ -15,10 +15,10 @@
 
 enum eAlarmStat
 {
-    eAlarmStat_Waiting=0,
-    eAlarmStat_Sending,
+    eAlarmStat_SendError=0,
     eAlarmStat_SendOK,
-    eAlarmStat_SendError,
+    eAlarmStat_Waiting,
+    eAlarmStat_Sending,
 };
 
 enum eAlarmType

@@ -80,8 +80,8 @@ static void Client_Rx32Tx33()
     uint8_t *sendbuf;
     uint32_t num;
     FSIZE_t size;
-    sendbuf=malloc(248);
-    memset(sendbuf,0,248);
+    sendbuf=malloc(252);
+    memset(sendbuf,0,252);
     memcpy(sendbuf,&WLP_HEAD,4);
     memcpy(sendbuf+4,MHID,10);
     sendbuf[14]=0x33;
@@ -281,15 +281,68 @@ static void Client_Rx78Tx79()
 //
 static void Client_Rx80Tx81()
 {
+    FATFS *fs;     /* Ponter to the filesystem object */
+    FRESULT fres=FR_NOT_READY;
+    FIL fp;
     uint8_t i=0,Verify=0;
     uint8_t *sendbuf;
-    uint32_t num,savenum;
-    FSIZE_t size;
-    sendbuf=malloc(248);
-    memcpy(sendbuf,u1mbuf->pData+11,4);
-    ReadTempFileSize(&size);
-    savenum=size/18;
-    
+    uint32_t savenum=0;
+    uint32_t allpack=0;
+    static uint32_t loclpack;
+    FSIZE_t size=0;
+    sendbuf=malloc(252);
+    memset(sendbuf,0,252);
+    memcpy(&loclpack,u1mbuf->pData+11,4);
+    memcpy(sendbuf,&WLP_HEAD,4);
+    memcpy(sendbuf+4,MHID,10);
+    sendbuf[14]=0x81;
+    sendbuf[15]=0x00;
+    if(SD_CardIsInserted())
+    {
+        fs = malloc(sizeof (FATFS));
+        fres=f_mount(fs, "0:", 0);
+        if(fres==FR_OK)
+        {
+            fres=f_open(&fp,".Alarmdata",FA_OPEN_EXISTING | FA_WRITE | FA_READ);
+            switch(fres)
+            {
+                case FR_OK:
+                    size=f_size(&fp);
+                    savenum=size/44;
+                    break;
+                default:
+                    break;
+            }
+            allpack=savenum/5;
+            if(savenum%10!=0)
+            {
+                allpack++;
+            }
+            
+            f_lseek(&fp,(loclpack-1)*44);
+            f_read(&fp,sendbuf+25,220,&savenum);
+            sendbuf[24]=savenum/44;  //包中数据数量 重复利用savenum内存
+            
+            
+            f_close(&fp);
+            f_mount(0,"0:",0);
+        }
+        if(savenum!=0)
+        {
+            sendbuf[15]=0x01;
+        }
+        
+        free(fs);
+    }
+    memcpy(sendbuf+16,&allpack,4);
+    memcpy(sendbuf+20,&loclpack,4);
+    for(i=4;i<14+2+8+savenum+1;i++)   //i=0  =>  i=4
+    {
+        Verify = Verify ^ (sendbuf[i]);
+    }
+    sendbuf[14+2+8+savenum+1]=Verify;
+    memcpy(sendbuf+14+2+8+savenum+2,&WLP_TAIL,4);
+    Usart1_SendData(sendbuf,14+2+8+savenum+2+4);
     free(sendbuf);
 }
 

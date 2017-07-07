@@ -12,7 +12,7 @@ extern volatile _GlobalConfig _gc;
 extern volatile _HostStat hstat;
 
 __abuf *abuf=0;
-void SaveData2AlarmFile(uint8_t device,uint8_t phonenum,uint8_t type)
+void SaveData2AlarmFile(uint8_t yn)
 {
     FATFS *fs;     /* Ponter to the filesystem object */
     uint32_t fres,wbt;
@@ -35,10 +35,18 @@ void SaveData2AlarmFile(uint8_t device,uint8_t phonenum,uint8_t type)
                     f_chmod(".Alarmdata",AM_ARC|AM_HID,AM_ARC|AM_HID); 
                 case FR_OK:
                     f_open(&fp,".Alarmdata",FA_OPEN_APPEND | FA_WRITE | FA_READ);
-                    f_write(&fp,&type,1,&wbt);
+                    f_write(&fp,&yn,1,&wbt);  //³É¹¦Ê§°Ü
+                    f_write(&fp,&abuf->AlarmType,1,&wbt);
+                    f_write(&fp,abuf->PhoneNumber,16,&wbt);
+                    f_write(&fp,cDc[abuf->dev].ID,10,&wbt);
                     t=TimeCompress(_Dd->time);
                     f_write(&fp,&t,4,&wbt);
- 
+                    f_write(&fp,&_Dd[abuf->dev].Data1,2,&wbt);
+                    f_write(&fp,&cDc[abuf->dev].Data1Max,2,&wbt);
+                    f_write(&fp,&cDc[abuf->dev].Data1Min,2,&wbt);
+                    f_write(&fp,&_Dd[abuf->dev].Data2,2,&wbt);
+                    f_write(&fp,&cDc[abuf->dev].Data2Max,2,&wbt);
+                    f_write(&fp,&cDc[abuf->dev].Data2Min,2,&wbt);
                     f_close(&fp);
                     break;
                 default:
@@ -264,7 +272,7 @@ void SMSAlarm_DoWork()
         case eAlarmStat_SendOK:
         case eAlarmStat_SendError:
             //write data
-            //SaveData2AlarmFile();
+            SaveData2AlarmFile(abuf->AlarmStat);
             //clean buffer
             tb=abuf->pNext;
             abuf->usable=0;
