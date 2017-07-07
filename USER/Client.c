@@ -39,16 +39,27 @@ extern uint32_t SamplingIntervalTimer;
 ///////////////////////////////////////////////////////////////
 // ÉèÖÃÃüÁî Check OK
 //
+// Add PhoneNum Check
+//
 static void Client_Rx30Tx31()
 {
     uint8_t i=0,Verify=0;
     uint8_t sendbuf[25]={0};
-    memcpy((uint8_t*)_gc.PhoneNumber1,u1mbuf->pData+12,88);
+    memcpy((uint8_t*)_gc.PhoneNumber,u1mbuf->pData+12,88);
+    sendbuf[15]=0x01;
+    for(i=0;i<5;i++)
+    {
+        if((_gc.PhoneNumber[i][0]<='0'||_gc.PhoneNumber[i][0]>='9') && _gc.PhoneNumber[i][0]!='+' && _gc.PhoneNumber[i][0]!=0 )
+        {
+            sendbuf[15]=0x00;
+        }
+    }
     STMFLASH_Write((uint32_t)&c_gc,(uint16_t*)&_gc,sizeof(_GlobalConfig));
     memcpy(sendbuf,&WLP_HEAD,4);
     memcpy(sendbuf+4,MHID,10);
     sendbuf[14]=0x31;
-    sendbuf[15]=0x01;
+    //sendbuf[15]=0x01;
+    
     for(i=4;i<15;i++)   //i=0  =>  i=4
     {
         Verify = Verify ^ (sendbuf[i]);
@@ -75,7 +86,8 @@ static void Client_Rx32Tx33()
     memcpy(sendbuf+4,MHID,10);
     sendbuf[14]=0x33;
     sendbuf[15]=0x01;
-    memcpy(sendbuf+16,(uint8_t*)_gc.PhoneNumber1,89);
+    memcpy((uint8_t*)&_gc,(uint8_t*)&c_gc,sizeof(_GlobalConfig));
+    memcpy(sendbuf+16,(uint8_t*)_gc.PhoneNumber,89);
     ReadTempFileSize(&size);
     num=size/18;
     memcpy(sendbuf+16+89,&num,4);
@@ -204,7 +216,7 @@ static void Client_Rx78Tx79()
     FIL fp;
     uint8_t i=0,Verify=0;
     uint8_t *sendbuf;
-    uint32_t num,savenum=0;
+    uint32_t savenum=0;
     uint32_t allpack=0;
     static uint32_t loclpack;
     FSIZE_t size=0;

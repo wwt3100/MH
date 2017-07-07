@@ -76,23 +76,23 @@ ARM Macro Assembler    Page 2
    42 00001000         ;   <o>  Heap Size (in Bytes) <0x0-0xFFFFFFFF:8>
    43 00001000         ; </h>
    44 00001000         
-   45 00001000 00006000 
+   45 00001000 0000A000 
                        Heap_Size
-                               EQU              0x00006000
+                               EQU              0x0000A000
    46 00001000         
    47 00001000                 AREA             HEAP, NOINIT, READWRITE, ALIGN=
 3
    48 00000000         __heap_base
    49 00000000         Heap_Mem
                                SPACE            Heap_Size
-   50 00006000         __heap_limit
-   51 00006000         
-   52 00006000                 PRESERVE8
-   53 00006000                 THUMB
-   54 00006000         
-   55 00006000         
-   56 00006000         ; Vector Table Mapped to Address 0 at Reset
-   57 00006000                 AREA             RESET, DATA, READONLY
+   50 0000A000         __heap_limit
+   51 0000A000         
+   52 0000A000                 PRESERVE8
+   53 0000A000                 THUMB
+   54 0000A000         
+   55 0000A000         
+   56 0000A000         ; Vector Table Mapped to Address 0 at Reset
+   57 0000A000                 AREA             RESET, DATA, READONLY
    58 00000000                 EXPORT           __Vectors
    59 00000000                 EXPORT           __Vectors_End
    60 00000000                 EXPORT           __Vectors_Size
@@ -552,11 +552,11 @@ ARM Macro Assembler    Page 9
               00000000 
               00000000 
 Command Line: --debug --xref --diag_suppress=9931 --cpu=Cortex-M3 --apcs=interw
-ork --depend=..\obj\startup_stm32f10x_hd.d -o..\obj\startup_stm32f10x_hd.o -IC:
-\MH\USER\RTE\_MH -IC:\Keil_v5\ARM\PACK\Keil\STM32F1xx_DFP\2.2.0\Device\Include 
--IC:\Keil_v5\ARM\CMSIS\Include --predefine="__MICROLIB SETA 1" --predefine="__U
-VISION_VERSION SETA 522" --predefine="STM32F10X_HD SETA 1" --list=.\startup_stm
-32f10x_hd.lst ..\CORE\startup_stm32f10x_hd.s
+ork --depend=..\obj\startup_stm32f10x_hd.d -o..\obj\startup_stm32f10x_hd.o -ID:
+\Work\MasterHost\MH\USER\RTE\_MH -ID:\Keil_v5\ARM\PACK\Keil\STM32F1xx_DFP\2.2.0
+\Device\Include -ID:\Keil_v5\ARM\CMSIS\Include --predefine="__MICROLIB SETA 1" 
+--predefine="__UVISION_VERSION SETA 522" --predefine="STM32F10X_HD SETA 1" --li
+st=.\startup_stm32f10x_hd.lst ..\CORE\startup_stm32f10x_hd.s
 
 
 
@@ -619,7 +619,7 @@ Symbol: __heap_base
    Uses
       At line 336 in file ..\CORE\startup_stm32f10x_hd.s
 Comment: __heap_base used once
-__heap_limit 00006000
+__heap_limit 0000A000
 
 Symbol: __heap_limit
    Definitions
@@ -1380,7 +1380,7 @@ Symbol: WWDG_IRQHandler
 ARM Macro Assembler    Page 1 Alphabetic symbol ordering
 Absolute symbols
 
-Heap_Size 00006000
+Heap_Size 0000A000
 
 Symbol: Heap_Size
    Definitions

@@ -25,7 +25,8 @@
 #include "stm32f10x_it.h" 
 #include <stdio.h>
 #include "mbuf.h"
-
+#include "SMSAlarm.h"
+//#define _DEBUG 
  
 void NMI_Handler(void)
 {
@@ -34,34 +35,50 @@ void NMI_Handler(void)
 void HardFault_Handler(void)
 {
   /* Go to infinite loop when Hard Fault exception occurs */
+#ifndef _DEBUG    
+  NVIC_SystemReset();
+#else
   while (1)
   {
   }
+#endif
 }
  
 void MemManage_Handler(void)
 {
   /* Go to infinite loop when Memory Manage exception occurs */
+#ifndef _DEBUG    
+  NVIC_SystemReset();
+#else
   while (1)
   {
   }
+#endif
 }
 
  
 void BusFault_Handler(void)
 {
   /* Go to infinite loop when Bus Fault exception occurs */
+#ifndef _DEBUG    
+  NVIC_SystemReset();
+#else
   while (1)
   {
   }
+#endif
 }
  
 void UsageFault_Handler(void)
 {
   /* Go to infinite loop when Usage Fault exception occurs */
+#ifndef _DEBUG    
+  NVIC_SystemReset();
+#else
   while (1)
   {
   }
+#endif
 }
  
 void SVC_Handler(void)
@@ -128,7 +145,7 @@ void USART1_IRQHandler (void)
                 head=rtempdata;
                 buf->usable=1;
                 buf->datasize=lenght;
-                buf->pNext=(__mbuf*)CreateMbuf(248);
+                buf->pNext=(__mbuf*)CreateMbuf(252);
                 tail=0;
                 lenght=0;
             }    
@@ -153,23 +170,30 @@ void USART1_IRQHandler (void)
                 head=rtempdata;
                 buf->usable=1;
                 buf->datasize=lenght;
-                buf->pNext=(__mbuf*)CreateMbuf(248);
+                buf->pNext=(__mbuf*)CreateMbuf(252);
                 tail=0;
                 lenght=0;
             }    
         }
 	}
 }
+uint8_t GSMOK=0;
+extern __abuf *abuf;
 void USART2_IRQHandler (void)
 {
     __mbuf* buf = u2mbuf;
     uint8_t rtempdata;
-    static uint64_t head=0;
+    static uint32_t len=0;
+    static uint64_t head=0,headok=0;
+    static uint32_t hstart=0;
     static uint16_t lenght=0,tail=0;
     if(USART_GetFlagStatus(USART2,USART_IT_RXNE)==SET)
 	{
 		USART_ClearITPendingBit(USART2,USART_IT_RXNE); 
-		rtempdata = USART_ReceiveData(USART2);	
+        rtempdata = USART_ReceiveData(USART2);	
+        #ifdef _DEBUG
+        *(gmbuf->pData+len++)=rtempdata;
+        #endif
         if(head != 0x5A5A5A5A5A230D0A)
         {
             head<<=8;
@@ -187,12 +211,32 @@ void USART2_IRQHandler (void)
             if(tail==0X0D0A)
             {
                 head=rtempdata;
-                buf->usable=1;
-                buf->datasize=lenght;
-                buf->pNext=(__mbuf*)CreateMbuf(248);
+                //buf->usable=1;
+                //buf->datasize=lenght;
+                //buf->pNext=(__mbuf*)CreateMbuf(60);
                 tail=0;
                 lenght=0;
             }    
+        }
+        if(hstart != 0x48544854)
+        {
+            hstart<<=8;
+            hstart|=rtempdata;
+        }
+        else
+        {
+            GSMOK=1;
+        }
+        if(headok != 0x534d53454e44204f)
+        {
+            headok<<=8;
+            headok|=rtempdata;
+        }
+        else
+        {
+            headok=rtempdata;
+            if(rtempdata==0x4b)
+                abuf->AlarmStat=eAlarmStat_SendOK;
         }
 	}
 }
@@ -225,11 +269,26 @@ void USART3_IRQHandler (void)
                 head=rtempdata;
                 buf->usable=1;
                 buf->datasize=lenght;
-                buf->pNext=(__mbuf*)CreateMbuf(248);
+                buf->pNext=(__mbuf*)CreateMbuf(252);
                 tail=0;
                 lenght=0;
             }    
         }
+    }
+}
+extern _GlobalConfig _gc;
+extern const char MHID[];
+void EXTI15_10_IRQHandler(void)
+{
+    char sendbuf[64]="ZZZZZ#AT+SMSEND=\"";
+
+    if(EXTI_GetITStatus(EXTI_Line15)==SET)
+    {
+         strcat((char*)sendbuf,(char*)_gc.PhoneNumber[0]);
+         strcat((char*)sendbuf,"\",3,\"警告!!!管理主机 ");
+         strcat((char*)sendbuf,MHID);
+         strcat((char*)sendbuf," 断电\r\n");
+         Usart2_SendData((uint8_t*)sendbuf,strlen((char*)sendbuf));
     }
 }
 /******************************************************************************/

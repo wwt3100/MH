@@ -93,7 +93,21 @@ void timer_init(uint32_t* pnTimer, uint32_t nValue)
         }
     }
 }
-
+void timer_init_sp(uint32_t* pnTimer, uint32_t nValue)
+{
+    if (nValue == 0)
+    {
+        *pnTimer = 1;
+    }
+    else
+    {
+        *pnTimer = g_tick_1ms + nValue;
+        if (*pnTimer == 0)
+        {
+            (*pnTimer)++;
+        }
+    }
+}
 /**----------------------------------------------------------------------------
  * 检查计数器是否已经到达终值
  * 

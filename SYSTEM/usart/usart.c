@@ -94,7 +94,7 @@ void USART1_Init(uint32_t band)
    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1;
    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
    NVIC_Init(&NVIC_InitStructure);
-   u1mbuf=CreateMbuf(250);
+   u1mbuf=CreateMbuf(252);
 //   gmbuf=CreateMbuf(120);
 
 }
@@ -148,7 +148,10 @@ void USART2_Init(uint32_t band)
    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1;
    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
    NVIC_Init(&NVIC_InitStructure);
-   u2mbuf=CreateMbuf(250);
+   u2mbuf=CreateMbuf(252);
+   #ifdef _DEBUG
+   gmbuf=CreateMbuf(1020);
+   #endif
 }
 void Usart2_SendData(uint8_t *buffer,uint16_t len)
 {  
@@ -210,7 +213,7 @@ void USART3_Init(uint32_t band)
    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
    NVIC_Init(&NVIC_InitStructure);
     
-    u3mbuf=CreateMbuf(250);
+    u3mbuf=CreateMbuf(252);
 }
 void Usart3_SendData(uint8_t *buffer,uint16_t len)
 {  

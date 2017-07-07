@@ -64,7 +64,7 @@ uint8_t Server_Process()
                     
                     if(_Dd[dev].Alram[0]==0)
                     {
-                        timer_init(&(_Dd[dev].OfflineAlarmTimer),_gc.OfflineAlarmInterval*60000);
+                        timer_init_sp(&(_Dd[dev].OfflineAlarmTimer),_gc.OfflineAlarmInterval*60000);
                     }
                     dev++;
                     resend=0;
@@ -92,7 +92,7 @@ uint8_t Server_Process()
                     if(_Dd[dev].Data1>cDc[dev].Data1Max || _Dd[dev].Data1<cDc[dev].Data1Min)
                     {
                         if(_Dd[dev].Data1AlarmTimer==0)
-                            timer_init(&_Dd[dev].Data1AlarmTimer,_gc.AlarmIntervalTime*60000);
+                            timer_init_sp(&_Dd[dev].Data1AlarmTimer,_gc.AlarmIntervalTime*60000);
                     }
                     else
                     {
@@ -101,7 +101,7 @@ uint8_t Server_Process()
                     if(_Dd[dev].Data2>cDc[dev].Data2Max || _Dd[dev].Data2<cDc[dev].Data2Min)
                     {
                         if(_Dd[dev].Data2AlarmTimer==0)
-                            timer_init(&_Dd[dev].Data2AlarmTimer,_gc.AlarmIntervalTime*60000);
+                            timer_init_sp(&_Dd[dev].Data2AlarmTimer,_gc.AlarmIntervalTime*60000);
                     }
                     else
                     {

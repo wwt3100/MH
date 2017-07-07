@@ -7,6 +7,7 @@ __mbuf* CreateMbuf(uint16_t length)
 {
     __mbuf *p=NULL;
     p = (__mbuf*)malloc(length);// + sizeof(__mbuf));
+    //memset(p,1,length);
     if(p==NULL)
         return p;
     p->pNext=NULL;

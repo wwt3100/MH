@@ -31,16 +31,21 @@ volatile _GlobalConfig _gc;
 const _GlobalConfig c_gc __attribute__((at(0x08010000)));
 
 const _DeviceConfig cDc[255] __attribute__((at(0x08011000)))={0};
-const char MHID[12]={"MH6001A001"};//__attribute__((at(0x08008000)))={"MH6001A001"};
+const char MHID[]={"MH6001A001"};//__attribute__((at(0x08008000)))={"MH6001A001"};
 _DeviceData _Dd[255]={0};
 extern uint8_t *SMSAlarmMessage;
 extern __mbuf *u1mbuf,*u2mbuf,*u3mbuf,*gmbuf;
+extern __abuf *abuf;
+
 extern struct rtc_time systmtime;
 
 static void gpio_init(void)
 {
+    EXTI_InitTypeDef EXTI_InitStructure;
     GPIO_InitTypeDef  GPIO_InitStructure;
+    NVIC_InitTypeDef NVIC_InitStructure;
  	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD, ENABLE);	 //使能PB端口时钟
 	
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8;				 
@@ -57,6 +62,23 @@ static void gpio_init(void)
     GPIO_Init(GPIOC, &GPIO_InitStructure);					 //根据设定参数初始化GPIOD.8
     GPIO_SetBits(GPIOC,GPIO_Pin_6);
     
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_15;  //断电中断
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING; 
+    GPIO_Init(GPIOB, &GPIO_InitStructure);	
+    
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);
+	GPIO_EXTILineConfig(GPIO_PortSourceGPIOB, GPIO_PinSource15);
+    EXTI_InitStructure.EXTI_Line=EXTI_Line15;
+    EXTI_InitStructure.EXTI_Mode=EXTI_Mode_Interrupt;
+    EXTI_InitStructure.EXTI_Trigger=EXTI_Trigger_Falling;
+    EXTI_InitStructure.EXTI_LineCmd=ENABLE;
+    EXTI_Init(&EXTI_InitStructure);
+    
+    NVIC_InitStructure.NVIC_IRQChannel = EXTI15_10_IRQn; //
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
+    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+    NVIC_Init(&NVIC_InitStructure);
 }
 
 int main(void)
@@ -65,10 +87,8 @@ int main(void)
     unsigned long fre_clust,freespace;//,total;
     FRESULT fres;
     FATFS *fs;
-    
-    memcpy(&_gc,&c_gc,sizeof(_GlobalConfig));
-    //_gc.MonitorDeviceNum=1;
-    //_gc.SamplingInterval=10;
+    abuf=CreateAlarmbuf(60);
+    memcpy((uint8_t*)&_gc,(uint8_t*)&c_gc,sizeof(_GlobalConfig));
     _gc.RetryInterval=11;
     
     

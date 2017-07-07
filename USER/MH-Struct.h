@@ -13,7 +13,7 @@ typedef enum
     e_ClientMode_GPRS,
 }e_GlobalConfig;
 
- typedef enum 
+typedef enum 
 {
     SST_ServerIDLE=0,
     SST_ServerRun,
@@ -44,11 +44,7 @@ typedef struct GlobalConfig
 //    uint8_t SeverMode; //  485/zigbee/RJ45
 //    uint8_t ClientMode; // RJ45/GPRS
     
-    uint8_t PhoneNumber1[16];
-    uint8_t PhoneNumber2[16];
-    uint8_t PhoneNumber3[16];
-    uint8_t PhoneNumber4[16];
-    uint8_t PhoneNumber5[16];
+    uint8_t PhoneNumber[5][16];
     uint8_t OverLimitInterval;  //超限报警间隔
     uint8_t AlarmIntervalTime; //声光报警间隔时间 
     uint8_t OfflineAlarmInterval;  //掉线报警间隔  
