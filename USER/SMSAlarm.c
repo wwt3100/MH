@@ -39,7 +39,7 @@ void SaveData2AlarmFile(uint8_t yn)
                     f_write(&fp,&abuf->AlarmType,1,&wbt);
                     f_write(&fp,abuf->PhoneNumber,16,&wbt);
                     f_write(&fp,cDc[abuf->dev].ID,10,&wbt);
-                    t=TimeCompress(_Dd->time);
+                    t=TimeCompress(_Dd[abuf->dev].time);  //fix bug time ==0
                     f_write(&fp,&t,4,&wbt);
                     f_write(&fp,&_Dd[abuf->dev].Data1,2,&wbt);
                     f_write(&fp,&cDc[abuf->dev].Data1Max,2,&wbt);
@@ -252,10 +252,10 @@ void SMSAlarm_DoWork()
                     }
                     break;
                 case eAlarmType_Offline:
-                    strcat((char*)sendbuf,"设备掉线");
+                    strcat((char*)sendbuf," 设备掉线");
                     break;
                 case eAlarmType_Online:
-                    strcat((char*)sendbuf,"设备掉线");
+                    strcat((char*)sendbuf," 设备上线恢复正常!");
                     break;
                 default:
                     break;

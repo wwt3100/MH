@@ -70,7 +70,7 @@ static void gpio_init(void)
 	GPIO_EXTILineConfig(GPIO_PortSourceGPIOB, GPIO_PinSource15);
     EXTI_InitStructure.EXTI_Line=EXTI_Line15;
     EXTI_InitStructure.EXTI_Mode=EXTI_Mode_Interrupt;
-    EXTI_InitStructure.EXTI_Trigger=EXTI_Trigger_Falling;
+    EXTI_InitStructure.EXTI_Trigger=EXTI_Trigger_Rising;
     EXTI_InitStructure.EXTI_LineCmd=ENABLE;
     EXTI_Init(&EXTI_InitStructure);
     
@@ -143,8 +143,11 @@ int main(void)
         {
             Led1Timer=0;
         }
-        Server_Process(); 
-        SMSAlarm_Process();     //短信报警
+        if(c_gc.MonitorDeviceNum>0) //没有仪器不采集
+        {
+            Server_Process(); 
+            SMSAlarm_Process();     //短信报警
+        }
         Client_Receive();
         if(timer_check(Led1Timer))
         {

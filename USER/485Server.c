@@ -59,10 +59,10 @@ uint8_t Server_Process()
                 stat=e_Stat_SampleingWait;
                 Server_Send67((cDc[dev].ID));
                 //Server_Send67("HS500BS657"); //for test
-                if(resend++>=2)  //如果发送3次没有收到回复
+                if(resend++>=2)  //如果发送2次没有收到回复
                 {
                     
-                    if(_Dd[dev].Alram[0]==0)
+                    if(_Dd[dev].Alram[0]==0 && _Dd[dev].OfflineAlarmTimer==0)
                     {
                         timer_init_sp(&(_Dd[dev].OfflineAlarmTimer),_gc.OfflineAlarmInterval*60000);
                     }

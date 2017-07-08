@@ -348,6 +348,7 @@ static void Client_Rx80Tx81()
 
 ///////////////////////////////////////////////////////////////
 // Êý¾ÝÉ¾³ý  Check OK
+// new form
 //
 static void Client_Rx72Tx73()
 {
@@ -357,6 +358,9 @@ static void Client_Rx72Tx73()
     uint8_t fres;
     uint16_t cmd;
     char filename[25]={0};
+    cmd=*u1mbuf->pData+11;
+    cmd<<=8;
+    cmd|=*u1mbuf->pData+12;
     memcpy(&cmd,u1mbuf->pData+11,2);
     sendbuf[15]=0x00;
     if(SD_CardIsInserted())
@@ -392,14 +396,16 @@ static void Client_Rx72Tx73()
     memcpy(sendbuf,&WLP_HEAD,4);
     memcpy(sendbuf+4,MHID,10);
     sendbuf[14]=0x73;
-    //sendbuf[15]=0x01;
-    for(i=4;i<15;i++)   //i=0  =>  i=4
+    sendbuf[15]=0x01;
+    sendbuf[16]=cmd>>8;
+    sendbuf[17]=cmd&0x00ff;
+    for(i=4;i<17;i++)   //i=0  =>  i=4
     {
         Verify = Verify ^ (sendbuf[i]);
     }
-    sendbuf[16]=Verify;
-    memcpy(sendbuf+17,&WLP_TAIL,4);
-    Usart1_SendData(sendbuf,21);
+    sendbuf[18]=Verify;
+    memcpy(sendbuf+19,&WLP_TAIL,4);
+    Usart1_SendData(sendbuf,23);
 }
 
 uint8_t Client_Receive()

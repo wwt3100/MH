@@ -281,14 +281,16 @@ extern const char MHID[];
 void EXTI15_10_IRQHandler(void)
 {
     char sendbuf[64]="ZZZZZ#AT+SMSEND=\"";
-
+    uint8_t a=0;
     if(EXTI_GetITStatus(EXTI_Line15)==SET)
     {
-         strcat((char*)sendbuf,(char*)_gc.PhoneNumber[0]);
-         strcat((char*)sendbuf,"\",3,\"警告!!!管理主机 ");
-         strcat((char*)sendbuf,MHID);
-         strcat((char*)sendbuf," 断电\r\n");
-         Usart2_SendData((uint8_t*)sendbuf,strlen((char*)sendbuf));
+        EXTI_ClearITPendingBit(EXTI_Line15);
+        strcat((char*)sendbuf,(char*)_gc.PhoneNumber[0]);
+        strcat((char*)sendbuf,"\",3,\"警告!!!管理主机 ");
+        strcat((char*)sendbuf,MHID);
+        strcat((char*)sendbuf," 断电\"\r\n");
+        Usart2_SendData((uint8_t*)sendbuf,strlen((char*)sendbuf));
+        while(GPIO_ReadInputDataBit(GPIOB,GPIO_Pin_15)==Bit_SET);//等待电量耗光
     }
 }
 /******************************************************************************/
