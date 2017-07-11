@@ -116,6 +116,7 @@ static void Client_Rx34Tx35()
     {
         _gc.MonitorDeviceNum=((sen-1)*4)+num;
         STMFLASH_Write((uint32_t)&c_gc,(uint16_t*)&_gc,sizeof(_GlobalConfig));
+        SamplingIntervalTimer=1;//开始采集  //fix 当全部配置完成之后再采集
     }
     for(i=0;i<num;i++)
     {
@@ -144,7 +145,7 @@ static void Client_Rx34Tx35()
     sendbuf[16]=Verify;
     memcpy(sendbuf+17,&WLP_TAIL,4);
     Usart1_SendData(sendbuf,21);
-    SamplingIntervalTimer=1;//开始采集
+    
 }
 
 ///////////////////////////////////////////////////////////////

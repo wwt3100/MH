@@ -150,31 +150,6 @@ void USART1_IRQHandler (void)
                 lenght=0;
             }    
         } 
-        if(head1 != 0x48544854)
-        {
-            head1<<=8;
-            head1|=rtempdata;
-        }
-        else
-        {
-            buf=gmbuf;
-            while(buf->pNext!=NULL)
-            {
-                buf=buf->pNext;
-            }
-            tail1<<=8;
-            tail1|=rtempdata;
-            *(buf->pData+lenght++)=rtempdata;
-            if(tail1==0x0d0a)
-            {
-                head=rtempdata;
-                buf->usable=1;
-                buf->datasize=lenght;
-                buf->pNext=(__mbuf*)CreateMbuf(252);
-                tail=0;
-                lenght=0;
-            }    
-        }
 	}
 }
 uint8_t GSMOK=0;
