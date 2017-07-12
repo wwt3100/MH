@@ -30,9 +30,9 @@ void SaveData2AlarmFile(uint8_t yn)
             switch(fres)
             {
                 case FR_NO_FILE:
-                    f_open(&fp,".Alarmdata",FA_CREATE_ALWAYS | FA_WRITE | FA_READ);
-                    f_close(&fp);
-                    f_chmod(".Alarmdata",AM_ARC|AM_HID,AM_ARC|AM_HID); 
+                    //f_open(&fp,".Alarmdata",FA_CREATE_ALWAYS | FA_WRITE | FA_READ);
+                    //f_close(&fp);
+                    //f_chmod(".Alarmdata",AM_ARC|AM_HID,AM_ARC|AM_HID); 
                 case FR_OK:
                     f_open(&fp,".Alarmdata",FA_OPEN_APPEND | FA_WRITE | FA_READ);
                     f_write(&fp,&yn,1,&wbt);  //³É¹¦Ê§°Ü

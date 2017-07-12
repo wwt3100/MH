@@ -40,6 +40,7 @@ extern uint32_t SamplingIntervalTimer;
 // ÉèÖÃÃüÁî Check OK
 //
 // Add PhoneNum Check
+// Add SMSAlarmNum Limit
 //
 static void Client_Rx30Tx31()
 {
@@ -53,6 +54,10 @@ static void Client_Rx30Tx31()
         {
             sendbuf[15]=0x00;
         }
+    }
+    if(_gc.SMSAlarmNum>10)
+    {
+        _gc.SMSAlarmNum=10;
     }
     STMFLASH_Write((uint32_t)&c_gc,(uint16_t*)&_gc,sizeof(_GlobalConfig));
     memcpy(sendbuf,&WLP_HEAD,4);

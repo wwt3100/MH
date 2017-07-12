@@ -62,9 +62,9 @@ void SaveData2TempFile(_DeviceData *dd)
             switch(fres)
             {
                 case FR_NO_FILE:
-                    f_open(&fp,".Tempdata",FA_CREATE_ALWAYS | FA_WRITE | FA_READ);
-                    f_close(&fp);
-                    f_chmod(".Tempdata",AM_ARC|AM_HID,AM_ARC|AM_HID); //block for test
+                    //f_open(&fp,".Tempdata",FA_CREATE_ALWAYS | FA_WRITE | FA_READ);
+                    //f_close(&fp);
+                    //f_chmod(".Tempdata",AM_ARC|AM_HID,AM_ARC|AM_HID); //block for test
                 case FR_OK:
                     f_open(&fp,".Tempdata",FA_OPEN_APPEND | FA_WRITE | FA_READ);
                     f_write(&fp,dd->ID,10,&wbt);
