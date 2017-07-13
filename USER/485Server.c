@@ -55,7 +55,7 @@ uint8_t Server_Process()
             }
             else
             {
-                timer_init(&timeout,_gc.RetryInterval*100);
+                timer_init(&timeout,11*100);
                 stat=e_Stat_SampleingWait;
                 Server_Send67((cDc[dev].ID));
                 //Server_Send67("HS500BS657"); //for test
@@ -168,7 +168,7 @@ uint8_t Server_Process()
                 free(u1mbuf);
                 u1mbuf=tb;
                 stat=e_Stat_PCMessageWait;
-                timer_init(&PCmsgtimeout,_gc.RetryInterval*100);
+                timer_init(&PCmsgtimeout,11*100);
             }
             else
             {

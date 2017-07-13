@@ -89,7 +89,7 @@ int main(void)
     FATFS *fs;
     abuf=CreateAlarmbuf(60);
     memcpy((uint8_t*)&_gc,(uint8_t*)&c_gc,sizeof(_GlobalConfig));
-    _gc.RetryInterval=11;
+    //_gc.RetryInterval=11;
     
     
     fs=malloc(sizeof(FATFS));	    
