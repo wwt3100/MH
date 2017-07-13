@@ -84,7 +84,7 @@ static void gpio_init(void)
 int main(void)
 {	 
     uint8_t l=0;
-    unsigned long fre_clust,freespace;//,total;
+    unsigned long long fre_clust,freespace;//,total;
     FRESULT fres;
     FATFS *fs;
     abuf=CreateAlarmbuf(60);
