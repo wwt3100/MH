@@ -47,6 +47,7 @@ static void gpio_init(void)
  	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD, ENABLE);	 //使能PB端口时钟
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOE, ENABLE);
 	
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8;				 
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP; 		 //推挽输出

@@ -119,8 +119,7 @@ void USART1_IRQHandler (void)
 {
     __mbuf* buf = u1mbuf;
     uint8_t rtempdata;
-    static uint32_t head=0,head1=0,tail=0;
-    static uint16_t tail1=0;
+    static uint32_t head=0,tail=0;
     static uint16_t lenght=0;
     if(USART_GetFlagStatus(USART1,USART_IT_RXNE)==SET)
 	{

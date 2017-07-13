@@ -254,8 +254,11 @@ uint8_t Server_Receive()
         }
     }
     processend:
-    Usart1_SendData((uint8_t*)&WLP_HEAD,4); //Send to PC
-    Usart1_SendData(u3mbuf->pData,u3mbuf->datasize);//Send to PC
+    if(GPIO_ReadInputDataBit(GPIOE,GPIO_Pin_7)==RESET)
+    {
+        Usart1_SendData((uint8_t*)&WLP_HEAD,4); //Send to PC
+        Usart1_SendData(u3mbuf->pData,u3mbuf->datasize);//Send to PC
+    }
     tb=u3mbuf->pNext;
     u3mbuf->usable=0;
     free(u3mbuf);

@@ -1,6 +1,7 @@
 
 #include "DataFile.h"
 
+static DWORD SaveNumSize=0;
 
 void SaveData2RecodeFile(_DeviceData *dd)
 {
@@ -66,13 +67,20 @@ void SaveData2TempFile(_DeviceData *dd)
                     //f_close(&fp);
                     //f_chmod(".Tempdata",AM_ARC|AM_HID,AM_ARC|AM_HID); //block for test
                 case FR_OK:
-                    f_open(&fp,".Tempdata",FA_OPEN_APPEND | FA_WRITE | FA_READ);
+                    f_open(&fp,".Tempdata",FA_CREATE_ALWAYS | FA_WRITE | FA_READ);
+                    if(SaveNumSize==0)
+                    {
+                        SaveNumSize=f_size(&fp);
+                        //SaveNum/=18;
+                    }
+                    f_lseek(&fp,SaveNumSize);
                     f_write(&fp,dd->ID,10,&wbt);
                     t=TimeCompress(dd->time);
                     f_write(&fp,&t,4,&wbt);
                     f_write(&fp,&dd->Data1,2,&wbt);
                     f_write(&fp,&dd->Data2,2,&wbt);
                     f_close(&fp);
+                    SaveNumSize+=18;
                     break;
                 default:
                     break;
