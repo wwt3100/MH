@@ -17,17 +17,18 @@ void SaveData2AlarmFile(uint8_t yn)
     FATFS *fs;     /* Ponter to the filesystem object */
     uint32_t fres,wbt;
     DIR dj;         /* Directory search object */
-    FILINFO fno;    /* File information */
+    FILINFO *fno;    /* File information */
     FIL *fp;
     uint32_t t;
     if(SD_CardIsInserted())
     {
         fs = malloc(636);//malloc(sizeof (FATFS));
         fp = malloc(636);
+        fno= malloc(380);
         fres=f_mount(fs, "0:", 0);
         if(fres==FR_OK)
         {
-            fres=f_findfirst(&dj, &fno, "", ".Alarmdata");
+            fres=f_findfirst(&dj, fno, "", ".Alarmdata");
             switch(fres)
             {
                 case FR_NO_FILE:
@@ -57,6 +58,7 @@ void SaveData2AlarmFile(uint8_t yn)
         f_mount(0,"0:",0);
         free(fs);
         free(fp);
+        free(fno);
     }
 }
 
@@ -189,7 +191,7 @@ uint8_t SMSAlarm_SetBuf()
     {
         LED3(0);
         AlarmBellTimer=0;
-        GPIO_WriteBit(GPIOA,GPIO_Pin_4,0);
+        GPIO_WriteBit(GPIOA,GPIO_Pin_4,Bit_RESET);
     }
     
     if(timer_check(AlarmBellTimer)) //·äÃùÆ÷¼ä¸ôÏì

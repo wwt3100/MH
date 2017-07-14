@@ -51,17 +51,18 @@ void SaveData2TempFile(_DeviceData *dd)
     FATFS *fs;     /* Ponter to the filesystem object */
     uint32_t fres,wbt;
     DIR dj;         /* Directory search object */
-    FILINFO fno;    /* File information */
+    FILINFO *fno;    /* File information */
     FIL *fp;
     uint32_t t;
     if(SD_CardIsInserted())
     {
         fs = malloc(636);//malloc(sizeof (FATFS));
         fp = malloc(636);
+        fno= malloc(380);
         fres=f_mount(fs, "0:", 0);
         if(fres==FR_OK)
         {
-            fres=f_findfirst(&dj, &fno, "", ".Tempdata");
+            fres=f_findfirst(&dj, fno, "", ".Tempdata");
             switch(fres)
             {
                 case FR_NO_FILE:
@@ -69,13 +70,13 @@ void SaveData2TempFile(_DeviceData *dd)
                     //f_close(&fp);
                     //f_chmod(".Tempdata",AM_ARC|AM_HID,AM_ARC|AM_HID); //block for test
                 case FR_OK:
-                    f_open(fp,".Tempdata",FA_CREATE_ALWAYS | FA_WRITE | FA_READ);
-                    if(SaveNumSize==0)
-                    {
-                        SaveNumSize=f_size(fp);
-                        //SaveNum/=18;
-                    }
-                    f_lseek(fp,SaveNumSize);
+                    f_open(fp,".Tempdata",FA_OPEN_APPEND | FA_WRITE | FA_READ);
+//                    if(SaveNumSize==0)
+//                    {
+//                        SaveNumSize=f_size(fp);
+//                        //SaveNum/=18;
+//                    }
+//                    f_lseek(fp,SaveNumSize);
                     f_write(fp,dd->ID,10,&wbt);
                     t=TimeCompress(dd->time);
                     f_write(fp,&t,4,&wbt);
@@ -92,7 +93,7 @@ void SaveData2TempFile(_DeviceData *dd)
         f_mount(0,"0:",0);
         free(fs);
         free(fp);
-        
+        free(fno);
     }
 }
 

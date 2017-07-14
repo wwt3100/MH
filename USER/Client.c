@@ -230,7 +230,7 @@ static void Client_Rx78Tx79()
     static uint32_t loclpack;
     FSIZE_t size=0;
     sendbuf=malloc(252);
-    memset(sendbuf,0,248);
+    memset(sendbuf,0,252);
     memcpy(&loclpack,u1mbuf->pData+11,4);
     memcpy(sendbuf,&WLP_HEAD,4);
     memcpy(sendbuf+4,MHID,10);
@@ -258,7 +258,10 @@ static void Client_Rx78Tx79()
             {
                 allpack++;
             }
-            
+            if(loclpack-1>allpack)  //判断是否跃包
+            {
+                sendbuf[15]=0x00;
+            }
             f_lseek(fp,(loclpack-1)*18);
             f_read(fp,sendbuf+25,180,&savenum);
             sendbuf[24]=savenum/18;  //包中数据数量 重复利用savenum内存
@@ -271,7 +274,7 @@ static void Client_Rx78Tx79()
         {
             sendbuf[15]=0x01;
         }
-        
+        free(fp);
         free(fs);
     }
     memcpy(sendbuf+16,&allpack,4);
