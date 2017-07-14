@@ -180,7 +180,7 @@ uint8_t SMSAlarm_SetBuf()
     }
     if(_gc.AlarmONOFF==1 && AlarmOn>0)
     {
-        LED3(1);
+        //LED3(1);
         //声光报警
         if(AlarmBellTimer==0)
         {
@@ -194,12 +194,13 @@ uint8_t SMSAlarm_SetBuf()
         GPIO_WriteBit(GPIOA,GPIO_Pin_4,Bit_RESET);
     }
     
-    if(timer_check(AlarmBellTimer)) //蜂鸣器间隔响
+    if(timer_check(AlarmBellTimer)) //报警灯闪烁  蜂鸣器间隔响
     {
         timer_init(&AlarmBellTimer,1000);
         a=GPIO_ReadInputDataBit(GPIOA,GPIO_Pin_4);
         (a==0)?(a=1):(a=0);
         GPIO_WriteBit(GPIOA,GPIO_Pin_4,a);
+        LED3(a);
     }
     dev++;
     if(_gc.MonitorDeviceNum<=dev)
@@ -209,6 +210,7 @@ uint8_t SMSAlarm_SetBuf()
     return 0;
 }
 extern uint8_t GSMOK;
+uint32_t SMSAlarmTimeout=0;
 void SMSAlarm_DoWork()
 {
     __abuf *tb;
@@ -268,10 +270,15 @@ void SMSAlarm_DoWork()
             Usart2_SendData(sendbuf,strlen((char*)sendbuf));
             //send SMS
             abuf->AlarmStat=eAlarmStat_Sending;
+            timer_init(&SMSAlarmTimeout,5000); 
             free(sendbuf);
             break;
         case eAlarmStat_Sending:
             // Wait
+            if(timer_check(SMSAlarmTimeout)) //超时未发送成功
+            {
+                abuf->AlarmStat=eAlarmStat_SendError;
+            }
             break;
         case eAlarmStat_SendOK:
         case eAlarmStat_SendError:

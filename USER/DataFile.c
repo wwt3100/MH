@@ -2,11 +2,13 @@
 #include "DataFile.h"
 
 static DWORD SaveNumSize=0;
+extern volatile _HostStat hstat;
+
 
 void SaveData2RecodeFile(_DeviceData *dd)
 {
     FATFS *fs;     /* Ponter to the filesystem object */
-    FRESULT fres;
+    FRESULT fres=FR_INVALID_DRIVE;
     DIR dj={0};         /* Directory search object */
     FILINFO fno={0};    /* File information */
     FIL *fp;
@@ -44,12 +46,13 @@ void SaveData2RecodeFile(_DeviceData *dd)
         free(fs);
         free(fp);
     }
+    hstat.SDCardStat=fres;
 }
 
 void SaveData2TempFile(_DeviceData *dd)
 {
     FATFS *fs;     /* Ponter to the filesystem object */
-    uint32_t fres,wbt;
+    uint32_t fres=FR_INVALID_DRIVE,wbt;
     DIR dj;         /* Directory search object */
     FILINFO *fno;    /* File information */
     FIL *fp;
@@ -95,12 +98,13 @@ void SaveData2TempFile(_DeviceData *dd)
         free(fp);
         free(fno);
     }
+    hstat.SDCardStat=fres;
 }
 
 FRESULT ReadTempFileSize(FSIZE_t *size)
 {
     FATFS *fs;     /* Ponter to the filesystem object */
-    FRESULT fres=FR_NOT_READY;
+    FRESULT fres=FR_INVALID_DRIVE;
     FIL *fp;
     *size=0;
     if(SD_CardIsInserted())
@@ -124,6 +128,7 @@ FRESULT ReadTempFileSize(FSIZE_t *size)
         free(fs);
         free(fp);
     }
+    hstat.SDCardStat=fres;
     return fres;
 }
 

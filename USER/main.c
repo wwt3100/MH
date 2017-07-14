@@ -24,7 +24,7 @@
 
 volatile uint32_t g_tick_1ms;
 
-uint32_t Led1Timer=0,Led2Timer=0,Led3Timer=0;
+uint32_t Led1Timer=0,Led2Timer=0,Led2Timer2=0,Led3Timer=0;
 //uint32_t SMSAlarmTimer=1;
 volatile _HostStat hstat;
 volatile _GlobalConfig _gc;
@@ -90,7 +90,7 @@ int main(void)
 {	 
     uint8_t l=0;
     unsigned long long fre_clust,freespace;//,total;
-    FRESULT fres;
+    FRESULT fres=FR_INVALID_DRIVE;
     FATFS *fs;
     abuf=CreateAlarmbuf(60);
     memcpy((uint8_t*)&_gc,(uint8_t*)&c_gc,sizeof(_GlobalConfig));
@@ -120,31 +120,44 @@ int main(void)
             //total = (fs->n_fatent - 2) * fs->csize;
             freespace = fre_clust * fs->csize;
             if(freespace<8192)      
-                hstat.SDCardStat=3;         //SD卡空间不足
+                hstat.SDCardStat=20;         //SD卡空间不足
             else 
-                hstat.SDCardStat=1;
+                hstat.SDCardStat=fres;
         }
         else
         {
-            hstat.SDCardStat=2;
+            hstat.SDCardStat=fres;
         }
         f_mount(0,"0:",1);
 	}
     else    
     {
         startupsderro:
-        hstat.SDCardStat=0;
+        hstat.SDCardStat=fres;
     }
     free(fs);
     //timer_init(&Led3Timer,500);
     LED2(1);
 	while(1)
 	{
-        if(hstat.SDCardStat!=1)
+        if(timer_check_nolimit(Led2Timer))  //设备心跳灯
         {
-            timer_init(&Led1Timer,500);
+            if(timer_check_nolimit(Led2Timer2))
+            {
+                timer_init(&Led2Timer,1500);
+                timer_init(&Led2Timer2,1550);
+            }
+            LED2(Bit_RESET);
         }
         else
+        {
+            LED2(Bit_SET);
+        }
+        if(hstat.SDCardStat!=FR_OK && Led1Timer==0)  //SD卡异常报警
+        {
+            timer_init(&Led1Timer,400);
+        }
+        if(hstat.SDCardStat==FR_OK)
         {
             Led1Timer=0;
         }
@@ -156,7 +169,7 @@ int main(void)
         Client_Receive();
         if(timer_check(Led1Timer))
         {
-            timer_init(&Led1Timer,2000);
+            timer_init(&Led1Timer,1000);
             (l==0)?(l=1):(l=0);
             LED1(l);
         }
