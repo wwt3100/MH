@@ -67,6 +67,10 @@ static void gpio_init(void)
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING; 
     GPIO_Init(GPIOB, &GPIO_InitStructure);	
     
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_7;  //Line½Å
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING; 
+    GPIO_Init(GPIOE, &GPIO_InitStructure);
+    
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);
 	GPIO_EXTILineConfig(GPIO_PortSourceGPIOB, GPIO_PinSource15);
     EXTI_InitStructure.EXTI_Line=EXTI_Line15;

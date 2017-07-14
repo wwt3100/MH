@@ -18,11 +18,12 @@ void SaveData2AlarmFile(uint8_t yn)
     uint32_t fres,wbt;
     DIR dj;         /* Directory search object */
     FILINFO fno;    /* File information */
-    FIL fp;
+    FIL *fp;
     uint32_t t;
     if(SD_CardIsInserted())
     {
-        fs = malloc(sizeof (FATFS));
+        fs = malloc(636);//malloc(sizeof (FATFS));
+        fp = malloc(636);
         fres=f_mount(fs, "0:", 0);
         if(fres==FR_OK)
         {
@@ -34,20 +35,20 @@ void SaveData2AlarmFile(uint8_t yn)
                     //f_close(&fp);
                     //f_chmod(".Alarmdata",AM_ARC|AM_HID,AM_ARC|AM_HID); 
                 case FR_OK:
-                    f_open(&fp,".Alarmdata",FA_OPEN_APPEND | FA_WRITE | FA_READ);
-                    f_write(&fp,&yn,1,&wbt);  //成功失败
-                    f_write(&fp,&abuf->AlarmType,1,&wbt);
-                    f_write(&fp,abuf->PhoneNumber,16,&wbt);
-                    f_write(&fp,cDc[abuf->dev].ID,10,&wbt);
+                    f_open(fp,".Alarmdata",FA_OPEN_APPEND | FA_WRITE | FA_READ);
+                    f_write(fp,&yn,1,&wbt);  //成功失败
+                    f_write(fp,&abuf->AlarmType,1,&wbt);
+                    f_write(fp,abuf->PhoneNumber,16,&wbt);
+                    f_write(fp,cDc[abuf->dev].ID,10,&wbt);
                     t=TimeCompress(_Dd[abuf->dev].time);  //fix bug time ==0
-                    f_write(&fp,&t,4,&wbt);
-                    f_write(&fp,&_Dd[abuf->dev].Data1,2,&wbt);
-                    f_write(&fp,&cDc[abuf->dev].Data1Max,2,&wbt);
-                    f_write(&fp,&cDc[abuf->dev].Data1Min,2,&wbt);
-                    f_write(&fp,&_Dd[abuf->dev].Data2,2,&wbt);
-                    f_write(&fp,&cDc[abuf->dev].Data2Max,2,&wbt);
-                    f_write(&fp,&cDc[abuf->dev].Data2Min,2,&wbt);
-                    f_close(&fp);
+                    f_write(fp,&t,4,&wbt);
+                    f_write(fp,&_Dd[abuf->dev].Data1,2,&wbt);
+                    f_write(fp,&cDc[abuf->dev].Data1Max,2,&wbt);
+                    f_write(fp,&cDc[abuf->dev].Data1Min,2,&wbt);
+                    f_write(fp,&_Dd[abuf->dev].Data2,2,&wbt);
+                    f_write(fp,&cDc[abuf->dev].Data2Max,2,&wbt);
+                    f_write(fp,&cDc[abuf->dev].Data2Min,2,&wbt);
+                    f_close(fp);
                     break;
                 default:
                     break;
@@ -55,6 +56,7 @@ void SaveData2AlarmFile(uint8_t yn)
         }
         f_mount(0,"0:",0);
         free(fs);
+        free(fp);
     }
 }
 

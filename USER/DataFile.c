@@ -9,12 +9,12 @@ void SaveData2RecodeFile(_DeviceData *dd)
     FRESULT fres;
     DIR dj={0};         /* Directory search object */
     FILINFO fno={0};    /* File information */
-    FIL fp={0};
+    FIL *fp;
     char filename[25]={0};
     if(SD_CardIsInserted())
     {
-        fs = malloc(sizeof (FATFS));
-        fres=f_mount(fs, "0:", 0);
+        fs = malloc(636);//malloc(sizeof (FATFS));
+        fp = malloc(636);
         if(fres==FR_OK)
         {
             memcpy(filename,dd->ID,10);
@@ -29,19 +29,20 @@ void SaveData2RecodeFile(_DeviceData *dd)
 //                    strcpy(fno.fname,filename);
 //                    f_close(&fp);
 //                }
-                fres=f_open(&fp,filename,FA_OPEN_APPEND | FA_WRITE | FA_READ);   //打开文件,如果不存在则新建
+                fres=f_open(fp,filename,FA_OPEN_APPEND | FA_WRITE | FA_READ);   //打开文件,如果不存在则新建
                 if(fres==FR_OK)
                 {
-                    f_printf(&fp,"%d-%d-%d\t",dd->time[0]+2000,dd->time[1],dd->time[2]);
-                    f_printf(&fp,"%d:%d:%d\t",dd->time[3],dd->time[4],dd->time[5]);
-                    f_printf(&fp,"%d.%d\t",(dd->Data1)/10,(dd->Data1)%10);
-                    f_printf(&fp,"%d.%d\r\n",(dd->Data2)/10,(dd->Data2)%10);
-                    f_close(&fp);
+                    f_printf(fp,"%d-%d-%d\t",dd->time[0]+2000,dd->time[1],dd->time[2]);
+                    f_printf(fp,"%d:%d:%d\t",dd->time[3],dd->time[4],dd->time[5]);
+                    f_printf(fp,"%d.%d\t",(dd->Data1)/10,(dd->Data1)%10);
+                    f_printf(fp,"%d.%d\r\n",(dd->Data2)/10,(dd->Data2)%10);
+                    f_close(fp);
                 }
             }
         }
         f_mount(0,"0:",0);
         free(fs);
+        free(fp);
     }
 }
 
@@ -51,11 +52,12 @@ void SaveData2TempFile(_DeviceData *dd)
     uint32_t fres,wbt;
     DIR dj;         /* Directory search object */
     FILINFO fno;    /* File information */
-    FIL fp;
+    FIL *fp;
     uint32_t t;
     if(SD_CardIsInserted())
     {
-        fs = malloc(sizeof (FATFS));
+        fs = malloc(636);//malloc(sizeof (FATFS));
+        fp = malloc(636);
         fres=f_mount(fs, "0:", 0);
         if(fres==FR_OK)
         {
@@ -67,19 +69,20 @@ void SaveData2TempFile(_DeviceData *dd)
                     //f_close(&fp);
                     //f_chmod(".Tempdata",AM_ARC|AM_HID,AM_ARC|AM_HID); //block for test
                 case FR_OK:
-                    f_open(&fp,".Tempdata",FA_CREATE_ALWAYS | FA_WRITE | FA_READ);
+                    f_open(fp,".Tempdata",FA_CREATE_ALWAYS | FA_WRITE | FA_READ);
                     if(SaveNumSize==0)
                     {
-                        SaveNumSize=f_size(&fp);
+                        SaveNumSize=f_size(fp);
                         //SaveNum/=18;
                     }
-                    f_lseek(&fp,SaveNumSize);
-                    f_write(&fp,dd->ID,10,&wbt);
+                    f_lseek(fp,SaveNumSize);
+                    f_write(fp,dd->ID,10,&wbt);
                     t=TimeCompress(dd->time);
-                    f_write(&fp,&t,4,&wbt);
-                    f_write(&fp,&dd->Data1,2,&wbt);
-                    f_write(&fp,&dd->Data2,2,&wbt);
-                    f_close(&fp);
+                    f_write(fp,&t,4,&wbt);
+                    f_write(fp,&dd->Data1,2,&wbt);
+                    f_write(fp,&dd->Data2,2,&wbt);
+                    f_close(fp);
+                    
                     SaveNumSize+=18;
                     break;
                 default:
@@ -88,6 +91,8 @@ void SaveData2TempFile(_DeviceData *dd)
         }
         f_mount(0,"0:",0);
         free(fs);
+        free(fp);
+        
     }
 }
 
@@ -95,26 +100,28 @@ FRESULT ReadTempFileSize(FSIZE_t *size)
 {
     FATFS *fs;     /* Ponter to the filesystem object */
     FRESULT fres=FR_NOT_READY;
-    FIL fp;
+    FIL *fp;
     *size=0;
     if(SD_CardIsInserted())
     {
-        fs = malloc(sizeof (FATFS));
+        fs = malloc(636);//malloc(sizeof (FATFS));
+        fp = malloc(636);
         fres=f_mount(fs, "0:", 0);
         if(fres==FR_OK)
         {
-            fres=f_open(&fp,".Tempdata",FA_OPEN_EXISTING);
+            fres=f_open(fp,".Tempdata",FA_OPEN_EXISTING);
             switch(fres)
             {
                 case FR_OK:
-                    *size=f_size(&fp);
+                    *size=f_size(fp);
                 default:
                     break;
             }
-            f_close(&fp);
+            f_close(fp);
             f_mount(0,"0:",0);
         }
         free(fs);
+        free(fp);
     }
     return fres;
 }

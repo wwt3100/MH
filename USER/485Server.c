@@ -254,7 +254,7 @@ uint8_t Server_Receive()
         }
     }
     processend:
-    //if(GPIO_ReadInputDataBit(GPIOE,GPIO_Pin_7)==SET)
+    //if(GPIO_ReadInputDataBit(GPIOE,GPIO_Pin_7)==SET)  //Link½Å²»¹ÜÓÃ???
     {
         Usart1_SendData((uint8_t*)&WLP_HEAD,4); //Send to PC
         Usart1_SendData(u3mbuf->pData,u3mbuf->datasize);//Send to PC

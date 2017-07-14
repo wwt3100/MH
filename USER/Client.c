@@ -222,14 +222,14 @@ static void Client_Rx78Tx79()
 {
     FATFS *fs;     /* Ponter to the filesystem object */
     FRESULT fres=FR_NOT_READY;
-    FIL fp;
+    FIL *fp;
     uint8_t i=0,Verify=0;
     uint8_t *sendbuf;
     uint32_t savenum=0;
     uint32_t allpack=0;
     static uint32_t loclpack;
     FSIZE_t size=0;
-    sendbuf=malloc(248);
+    sendbuf=malloc(252);
     memset(sendbuf,0,248);
     memcpy(&loclpack,u1mbuf->pData+11,4);
     memcpy(sendbuf,&WLP_HEAD,4);
@@ -238,15 +238,16 @@ static void Client_Rx78Tx79()
     sendbuf[15]=0x00;
     if(SD_CardIsInserted())
     {
-        fs = malloc(sizeof (FATFS));
+        fs = malloc(636);//malloc(sizeof (FATFS));
+        fp = malloc(636);
         fres=f_mount(fs, "0:", 0);
         if(fres==FR_OK)
         {
-            fres=f_open(&fp,".Tempdata",FA_OPEN_EXISTING | FA_WRITE | FA_READ);
+            fres=f_open(fp,".Tempdata",FA_OPEN_EXISTING | FA_WRITE | FA_READ);
             switch(fres)
             {
                 case FR_OK:
-                    size=f_size(&fp);
+                    size=f_size(fp);
                     savenum=size/18;
                     break;
                 default:
@@ -258,12 +259,12 @@ static void Client_Rx78Tx79()
                 allpack++;
             }
             
-            f_lseek(&fp,(loclpack-1)*18);
-            f_read(&fp,sendbuf+25,180,&savenum);
+            f_lseek(fp,(loclpack-1)*18);
+            f_read(fp,sendbuf+25,180,&savenum);
             sendbuf[24]=savenum/18;  //包中数据数量 重复利用savenum内存
             
             
-            f_close(&fp);
+            f_close(fp);
             f_mount(0,"0:",0);
         }
         if(savenum!=0)
@@ -292,7 +293,7 @@ static void Client_Rx80Tx81()
 {
     FATFS *fs;     /* Ponter to the filesystem object */
     FRESULT fres=FR_NOT_READY;
-    FIL fp;
+    FIL *fp;
     uint8_t i=0,Verify=0;
     uint8_t *sendbuf;
     uint32_t savenum=0;
@@ -308,15 +309,16 @@ static void Client_Rx80Tx81()
     sendbuf[15]=0x00;
     if(SD_CardIsInserted())
     {
-        fs = malloc(sizeof (FATFS));
+        fs = malloc(636);//malloc(sizeof (FATFS));
+        fp = malloc(636);
         fres=f_mount(fs, "0:", 0);
         if(fres==FR_OK)
         {
-            fres=f_open(&fp,".Alarmdata",FA_OPEN_EXISTING | FA_WRITE | FA_READ);
+            fres=f_open(fp,".Alarmdata",FA_OPEN_EXISTING | FA_WRITE | FA_READ);
             switch(fres)
             {
                 case FR_OK:
-                    size=f_size(&fp);
+                    size=f_size(fp);
                     savenum=size/44;
                     break;
                 default:
@@ -328,12 +330,12 @@ static void Client_Rx80Tx81()
                 allpack++;
             }
             
-            f_lseek(&fp,(loclpack-1)*44);
-            f_read(&fp,sendbuf+25,220,&savenum);
+            f_lseek(fp,(loclpack-1)*44);
+            f_read(fp,sendbuf+25,220,&savenum);
             sendbuf[24]=savenum/44;  //包中数据数量 重复利用savenum内存
             
             
-            f_close(&fp);
+            f_close(fp);
             f_mount(0,"0:",0);
         }
         if(savenum!=0)
@@ -342,6 +344,7 @@ static void Client_Rx80Tx81()
         }
         
         free(fs);
+        free(fp);
     }
     memcpy(sendbuf+16,&allpack,4);
     memcpy(sendbuf+20,&loclpack,4);
@@ -374,7 +377,7 @@ static void Client_Rx72Tx73()
     sendbuf[15]=0x00;
     if(SD_CardIsInserted())
     {
-        fs = malloc(sizeof (FATFS));
+        fs = malloc(636);//malloc(sizeof (FATFS));
         fres=f_mount(fs, "0:", 0);
         if(fres==FR_OK)
         {

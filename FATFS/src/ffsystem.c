@@ -20,7 +20,12 @@ void* ff_memalloc (	/* Returns pointer to the allocated memory block (null on no
 	UINT msize		/* Number of bytes to allocate */
 )
 {
-	return malloc(msize);	/* Allocate a new memory block with POSIX API */
+    //void* p;
+    if(msize==512)
+        return malloc(636);
+    else 
+        return malloc(msize);
+	//return p;	/* Allocate a new memory block with POSIX API */
 }
 
 
