@@ -86,6 +86,8 @@ static void Client_Rx32Tx33()
     uint32_t num;
     FSIZE_t size;
     sendbuf=malloc(252);
+    if(sendbuf==NULL)
+        return ;
     memset(sendbuf,0,252);
     memcpy(sendbuf,&WLP_HEAD,4);
     memcpy(sendbuf+4,MHID,10);
@@ -98,11 +100,12 @@ static void Client_Rx32Tx33()
     memcpy(sendbuf+16+89,&num,4);
     for(i=4;i<16+89+4;i++)   //i=0  =>  i=4
     {
-        Verify = Verify ^ (sendbuf[i]);
+        Verify = Verify ^ *(sendbuf+i);
     }
     sendbuf[16+89+4]=Verify;
     memcpy(sendbuf+16+89+4+1,&WLP_TAIL,4);
     Usart1_SendData(sendbuf,16+89+1+4+4);
+    free(sendbuf);
 }
 ///////////////////////////////////////////////////////////////
 // ≈‰÷√“«∆˜ Check OK
