@@ -10,18 +10,20 @@ void SaveData2RecodeFile(_DeviceData *dd)
     FATFS *fs;     /* Ponter to the filesystem object */
     FRESULT fres=FR_INVALID_DRIVE;
     DIR dj={0};         /* Directory search object */
-    FILINFO fno={0};    /* File information */
+    FILINFO *fno;    /* File information */
     FIL *fp;
     char filename[25]={0};
     if(SD_CardIsInserted())
     {
         fs = malloc(636);//malloc(sizeof (FATFS));
         fp = malloc(636);
+        fno= malloc(380);
+        fres=f_mount(fs, "0:", 0);
         if(fres==FR_OK)
         {
             memcpy(filename,dd->ID,10);
             strcat(filename,".xls");
-            fres=f_findfirst(&dj, &fno, "", filename);
+            fres=f_findfirst(&dj, fno, "", filename);
             if(fres == FR_NO_FILE || fres == FR_OK)
             {
 //                if(fres == FR_NO_FILE || fno.fname[0]==0)   //定义文件头

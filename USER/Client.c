@@ -169,11 +169,11 @@ static void Client_Rx76Tx77()
     uint8_t sendbuf[25]={0};
     uint8_t *AppData=u1mbuf->pData+12;
     int16_t checktime=0;
-    checktime+=systmtime.tm_min;
-    checktime+=systmtime.tm_hour;
-    checktime+=systmtime.tm_mday;
-    checktime+=systmtime.tm_mon;
-    checktime+=systmtime.tm_year;
+//    checktime+=systmtime.tm_min;
+//    checktime+=systmtime.tm_hour;
+//    checktime+=systmtime.tm_mday;
+//    checktime+=systmtime.tm_mon;
+//    checktime+=systmtime.tm_year;
     systmtime.tm_sec =RTC_CONVERT_BCD2BIN(*AppData);
     AppData++;
     systmtime.tm_min =RTC_CONVERT_BCD2BIN(*AppData);
@@ -190,19 +190,19 @@ static void Client_Rx76Tx77()
     RTC_WaitForLastTask();
     BKP_WriteBackupRegister(BKP_DR1, 0xA5A5);
     to_tm(RTC_GetCounter(), &systmtime);
-    checktime-=systmtime.tm_min;
-    checktime-=systmtime.tm_hour;
-    checktime-=systmtime.tm_mday;
-    checktime-=systmtime.tm_mon;
-    checktime-=systmtime.tm_year;
-    if(abs(checktime)<3) //简单校验
+//    checktime-=systmtime.tm_min;
+//    checktime-=systmtime.tm_hour;
+//    checktime-=systmtime.tm_mday;
+//    checktime-=systmtime.tm_mon;
+//    checktime-=systmtime.tm_year;
+//    if(abs(checktime)<3) //简单校验
     {
         sendbuf[15]=0x01;
     }
-    else
-    {
-        sendbuf[15]=0x00;
-    }
+//    else
+//    {
+//        sendbuf[15]=0x00;
+//    }
     memcpy(sendbuf,&WLP_HEAD,4);
     memcpy(sendbuf+4,MHID,10);
     sendbuf[14]=0x77;

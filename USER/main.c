@@ -160,6 +160,7 @@ int main(void)
         if(hstat.SDCardStat==FR_OK)
         {
             Led1Timer=0;
+            LED1(0);
         }
         if(c_gc.MonitorDeviceNum>0) //没有仪器不采集
         {
