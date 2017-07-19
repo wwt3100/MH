@@ -60,6 +60,7 @@ static void gpio_init(void)
     GPIO_ResetBits(GPIOA,GPIO_Pin_4);
     
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6;
     GPIO_Init(GPIOC, &GPIO_InitStructure);					 //根据设定参数初始化GPIOD.8
     GPIO_SetBits(GPIOC,GPIO_Pin_6);
     
@@ -108,6 +109,8 @@ int main(void)
     USART2_Init(115200);	 	//串口初始化为115200
     USART3_Init(19200);
 	SD_Init();
+    Usart2_SendData("AT\r\n",4);
+    
     if(SD_CardIsInserted())
     {
         
@@ -138,6 +141,7 @@ int main(void)
     free(fs);
     //timer_init(&Led3Timer,500);
     LED2(1);
+    Usart2_SendData("AT+CSQ\r\n",8);
 	while(1)
 	{
         if(timer_check_nolimit(Led2Timer))  //设备心跳灯

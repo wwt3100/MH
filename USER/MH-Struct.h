@@ -35,6 +35,8 @@ typedef struct HostStat
     uint8_t SDCardStat;
     uint8_t ServerStat;
     uint8_t ClientStat;
+    uint8_t GSMStat;
+    uint8_t PowerStat;
 }_HostStat;
 
 typedef struct GlobalConfig

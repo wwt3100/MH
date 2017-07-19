@@ -139,7 +139,7 @@ void USART1_IRQHandler (void)
             tail<<=8;
             tail|=rtempdata;
             *(buf->pData+lenght++)=rtempdata;
-            if(tail==0x297d7e04)
+            if(tail==0x297d7e04 || lenght>252)
             {
                 head=rtempdata;
                 buf->usable=1;
@@ -151,7 +151,6 @@ void USART1_IRQHandler (void)
         } 
 	}
 }
-uint8_t GSMOK=0;
 extern __abuf *abuf;
 void USART2_IRQHandler (void)
 {
@@ -168,50 +167,20 @@ void USART2_IRQHandler (void)
         #ifdef _DEBUG
         *(gmbuf->pData+len++)=rtempdata;
         #endif
-        if(head != 0x5A5A5A5A5A230D0A)
+        while(buf->pNext!=NULL)
         {
-            head<<=8;
-            head|=rtempdata;
+            buf=buf->pNext;
         }
-        else
+        tail<<=8;
+        tail|=rtempdata;
+        *(buf->pData+lenght++)=rtempdata;
+        buf->datasize=lenght;
+        if(lenght>124)
         {
-            while(buf->pNext!=NULL)
-            {
-                buf=buf->pNext;
-            }
-            tail<<=8;
-            tail|=rtempdata;
-            *(buf->pData+lenght++)=rtempdata;
-            if(tail==0X0D0A)
-            {
-                head=rtempdata;
-                //buf->usable=1;
-                //buf->datasize=lenght;
-                //buf->pNext=(__mbuf*)CreateMbuf(60);
-                tail=0;
-                lenght=0;
-            }    
-        }
-        if(hstart != 0x48544854)
-        {
-            hstart<<=8;
-            hstart|=rtempdata;
-        }
-        else
-        {
-            GSMOK=1;
-        }
-        if(headok != 0x534d53454e44204f)
-        {
-            headok<<=8;
-            headok|=rtempdata;
-        }
-        else
-        {
-            headok=rtempdata;
-            if(rtempdata==0x4b)
-                abuf->AlarmStat=eAlarmStat_SendOK;
-        }
+            buf->pNext=(__mbuf*)CreateMbuf(124);
+            tail=0;
+            lenght=0;
+        }    
 	}
 }
 void USART3_IRQHandler (void)
@@ -238,7 +207,7 @@ void USART3_IRQHandler (void)
             tail<<=8;
             tail|=rtempdata;
             *(buf->pData+lenght++)=rtempdata;
-            if(tail==0x297d7e04)
+            if(tail==0x297d7e04 || lenght>252)
             {
                 head=rtempdata;
                 buf->usable=1;
@@ -250,21 +219,15 @@ void USART3_IRQHandler (void)
         }
     }
 }
-extern _GlobalConfig _gc;
-extern const char MHID[];
+uint8_t MH_PowerDown=0;
 void EXTI15_10_IRQHandler(void)
 {
-    char sendbuf[64]="ZZZZZ#AT+SMSEND=\"";
+    //char sendbuf[64]="ZZZZZ#AT+SMSEND=\"";
     uint8_t a=0;
     if(EXTI_GetITStatus(EXTI_Line15)==SET)
     {
         EXTI_ClearITPendingBit(EXTI_Line15);
-        strcat((char*)sendbuf,(char*)_gc.PhoneNumber[0]);
-        strcat((char*)sendbuf,"\",3,\"警告!!!管理主机 ");
-        strcat((char*)sendbuf,MHID);
-        strcat((char*)sendbuf," 断电\"\r\n");
-        Usart2_SendData((uint8_t*)sendbuf,strlen((char*)sendbuf));
-        while(GPIO_ReadInputDataBit(GPIOB,GPIO_Pin_15)==Bit_SET);//等待电量耗光
+        MH_PowerDown=1;
     }
 }
 /******************************************************************************/
