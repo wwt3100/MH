@@ -175,7 +175,7 @@ void USART2_IRQHandler (void)
         tail|=rtempdata;
         *(buf->pData+lenght++)=rtempdata;
         buf->datasize=lenght;
-        if(lenght>124)
+        if((lenght>100 && tail==0x0d0a ) || lenght>124)
         {
             buf->pNext=(__mbuf*)CreateMbuf(124);
             tail=0;

@@ -215,58 +215,58 @@ void SMSAlarm_DoWork()
 {
     __abuf *tb;
     uint8_t *sendbuf=0;
-    char *str;
+    char *str,*str1;
     if(abuf->usable!=1)//|| GSMOK!=1)
         return;
     str=malloc(124);
     memset(str,0,124);
+    str1=malloc(124);
+    memset(str1,0,124);
     switch(abuf->AlarmStat)
     {
         case eAlarmStat_Waiting:
             sendbuf=malloc(252);
-            strcpy((char*)sendbuf,"ZZZZZ#AT+SMSEND=\"");
+            strcpy((char*)sendbuf,"AT+CMGS=\"");
             strcat((char*)sendbuf,(char*)abuf->PhoneNumber);
-            strcat((char*)sendbuf,"\",3,\"");
+            strcat((char*)sendbuf,"\"\r");
             sprintf(str,"20%02d-%02d-%02d %02d:%02d:%02d ",abuf->time[0],abuf->time[1],abuf->time[2],abuf->time[3],abuf->time[4],abuf->time[5]);
-            strcat((char*)sendbuf,str);
-            strcat((char*)sendbuf,(char*)cDc[abuf->dev].DeviceName);
+            //strcat((char*)sendbuf,str);
+            strcat((char*)str,(char*)cDc[abuf->dev].DeviceName);
             
             switch(abuf->AlarmType)
             {
                 case eAlarmType_OverLimit:
                     if(abuf->Option==1)
                     {
-                        sprintf(str,"温度超限:%d.%d ℃ (↓%d.%d,↑%d.%d)",abuf->Data1/10,abuf->Data1%10,abuf->Data1Min/10,abuf->Data1Min%10,abuf->Data1Max/10,abuf->Data1Max%10);
-                        strcat((char*)sendbuf,str);
+                        sprintf(str+strlen(str)," 温度超限:%d.%d ℃ (↓%d.%d,↑%d.%d)",abuf->Data1/10,abuf->Data1%10,abuf->Data1Min/10,abuf->Data1Min%10,abuf->Data1Max/10,abuf->Data1Max%10);
                     }
                     else if(abuf->Option==2)
                     {
-                        sprintf(str,"湿度超限:%d.%d %cRH (↓%d.%d,↑%d.%d)",abuf->Data2/10,abuf->Data2%10,'%',abuf->Data2Min/10,abuf->Data2Min%10,abuf->Data2Max/10,abuf->Data2Max%10);
-                        strcat((char*)sendbuf,str);
+                        sprintf(str+strlen(str)," 湿度超限:%d.%d %cRH (↓%d.%d,↑%d.%d)",abuf->Data2/10,abuf->Data2%10,'%',abuf->Data2Min/10,abuf->Data2Min%10,abuf->Data2Max/10,abuf->Data2Max%10);
                     }
                     break;
                 case eAlarmType_OverLimitRecovery:
                     if(abuf->Option==1)
                     {
-                        sprintf(str,"温度恢复 超限报警解除!");
-                        strcat((char*)sendbuf,str);
+                        strcat(str," 温度恢复 超限报警解除!");
                     }
                     else if(abuf->Option==2)
                     {
-                        sprintf(str,"湿度恢复 超限报警解除!");
-                        strcat((char*)sendbuf,str);
+                        strcat(str," 湿度恢复 超限报警解除!");
                     }
                     break;
                 case eAlarmType_Offline:
-                    strcat((char*)sendbuf," 设备掉线");
+                    strcat((char*)str," 设备掉线");
                     break;
                 case eAlarmType_Online:
-                    strcat((char*)sendbuf," 设备上线恢复正常!");
+                    strcat((char*)str," 设备上线恢复正常!");
                     break;
                 default:
                     break;
             }
-            strcat((char*)sendbuf,"\"\r\n");
+            ASCII2UNICODE();  //
+            sprintf(str+strlen(str),"%c",0x1a); //结束符
+            strcat((char*)str,str1);
             Usart2_SendData(sendbuf,strlen((char*)sendbuf));
             //send SMS
             abuf->AlarmStat=eAlarmStat_Sending;
@@ -293,13 +293,18 @@ void SMSAlarm_DoWork()
             break;
     }
     free(str);
+    free(str1);
 }
-
+void SMSAlarm_GSMProcess()
+{
+    
+}
 
 void SMSAlarm_Process(void)
 {
     SMSAlarm_SetBuf();
     SMSAlarm_DoWork();
+    SMSAlarm_GSMProcess();
 }
 
 
@@ -315,4 +320,8 @@ __abuf* CreateAlarmbuf(uint16_t length)
     return p;
 }
 
+char* SMSAlarm_GetLine()
+{
+    
+}
 

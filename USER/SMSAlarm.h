@@ -29,6 +29,11 @@ enum eAlarmType
     eAlarmType_Online,
 };
 
+enum eAlarmGSMStat
+{
+    eGSMStat_NoSIMCard,
+    eGSMStat_Ready,
+};
 
 #pragma pack(2)
 typedef struct TAlrmbuf	

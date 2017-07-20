@@ -105,7 +105,7 @@ int main(void)
  	LED_Init();		  			//初始化与LED连接的硬件接口
     RTC_Init();
 	FLASH_Init();				//初始化W25Q128 
-    USART1_Init(115200);	 	//串口初始化为115200
+    USART1_Init(38400);	 	//串口初始化为115200
     USART2_Init(115200);	 	//串口初始化为115200
     USART3_Init(19200);
 	SD_Init();
@@ -141,7 +141,7 @@ int main(void)
     free(fs);
     //timer_init(&Led3Timer,500);
     LED2(1);
-    Usart2_SendData("AT+CSQ\r\n",8);
+    //Usart2_SendData("AT+CSQ\r\n",8);
 	while(1)
 	{
         if(timer_check_nolimit(Led2Timer))  //设备心跳灯
