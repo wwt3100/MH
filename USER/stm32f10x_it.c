@@ -156,9 +156,6 @@ void USART2_IRQHandler (void)
 {
     __mbuf* buf = u2mbuf;
     uint8_t rtempdata;
-    static uint32_t len=0;
-    static uint64_t head=0,headok=0;
-    static uint32_t hstart=0;
     static uint16_t lenght=0,tail=0;
     if(USART_GetFlagStatus(USART2,USART_IT_RXNE)==SET)
 	{
@@ -223,7 +220,6 @@ uint8_t MH_PowerDown=0;
 void EXTI15_10_IRQHandler(void)
 {
     //char sendbuf[64]="ZZZZZ#AT+SMSEND=\"";
-    uint8_t a=0;
     if(EXTI_GetITStatus(EXTI_Line15)==SET)
     {
         EXTI_ClearITPendingBit(EXTI_Line15);

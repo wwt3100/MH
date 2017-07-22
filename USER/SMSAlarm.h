@@ -35,6 +35,17 @@ enum eAlarmGSMStat
     eGSMStat_Ready,
 };
 
+enum eGSM_CMD
+{
+    eGCMD_AT,
+    eGCMD_ATH,
+    eGCMD_ATE,
+    eGCMD_CMGS,
+    eGCMD_CMGF_R,
+    eGCMD_CMGF_W,
+    eGCMD_AT_W,
+};
+
 #pragma pack(2)
 typedef struct TAlrmbuf	
 {
@@ -67,8 +78,8 @@ typedef struct TAlrmbuf
 uint8_t SMSAlarm(uint16_t type,uint16_t dev,uint8_t op);
 
 void SMSAlarm_Process(void);
-
-
+void SMSAlarm_GSMProcess(void);
+void SMSAlarm_GSMWorkStat(void);
 __abuf* CreateAlarmbuf(uint16_t length);
 
 

@@ -36,6 +36,8 @@ extern _HostStat hstat;
 extern const char MHID[12];
 
 extern uint32_t SamplingIntervalTimer;
+
+extern FATFS *fs;
 ///////////////////////////////////////////////////////////////
 // 设置命令 Check OK
 //
@@ -55,7 +57,7 @@ static void Client_Rx30Tx31()
             sendbuf[15]=0x00;
         }
     }
-    if(_gc.SMSAlarmNum>10)
+    if(_gc.SMSAlarmNum>10) //短信重发次数限制10次
     {
         _gc.SMSAlarmNum=10;
     }
@@ -169,11 +171,7 @@ static void Client_Rx76Tx77()
     uint8_t sendbuf[25]={0};
     uint8_t *AppData=u1mbuf->pData+12;
     int16_t checktime=0;
-//    checktime+=systmtime.tm_min;
-//    checktime+=systmtime.tm_hour;
-//    checktime+=systmtime.tm_mday;
-//    checktime+=systmtime.tm_mon;
-//    checktime+=systmtime.tm_year;
+
     systmtime.tm_sec =RTC_CONVERT_BCD2BIN(*AppData);
     AppData++;
     systmtime.tm_min =RTC_CONVERT_BCD2BIN(*AppData);
@@ -185,24 +183,31 @@ static void Client_Rx76Tx77()
     systmtime.tm_mon =RTC_CONVERT_BCD2BIN(*AppData);
     AppData+=2;
     systmtime.tm_year=RTC_CONVERT_BCD2BIN(*AppData)+2000;
+    
+    checktime+=systmtime.tm_min;
+    checktime+=systmtime.tm_hour;
+    checktime+=systmtime.tm_mday;
+    checktime+=systmtime.tm_mon;
+    checktime+=systmtime.tm_year;
+    
     RTC_Config();	  /* RTC Configuration */
     RTC_SetCounter(mktimev(systmtime));
     RTC_WaitForLastTask();
     BKP_WriteBackupRegister(BKP_DR1, 0xA5A5);
     to_tm(RTC_GetCounter(), &systmtime);
-//    checktime-=systmtime.tm_min;
-//    checktime-=systmtime.tm_hour;
-//    checktime-=systmtime.tm_mday;
-//    checktime-=systmtime.tm_mon;
-//    checktime-=systmtime.tm_year;
-//    if(abs(checktime)<3) //简单校验
+    checktime-=systmtime.tm_min;
+    checktime-=systmtime.tm_hour;
+    checktime-=systmtime.tm_mday;
+    checktime-=systmtime.tm_mon;
+    checktime-=systmtime.tm_year;
+    if(abs(checktime)<3) //简单校验
     {
         sendbuf[15]=0x01;
     }
-//    else
-//    {
-//        sendbuf[15]=0x00;
-//    }
+    else
+    {
+        sendbuf[15]=0x00;
+    }
     memcpy(sendbuf,&WLP_HEAD,4);
     memcpy(sendbuf+4,MHID,10);
     sendbuf[14]=0x77;
@@ -220,7 +225,7 @@ static void Client_Rx76Tx77()
 //
 static void Client_Rx78Tx79()
 {
-    FATFS *fs;     /* Ponter to the filesystem object */
+//    FATFS *fs;     /* Ponter to the filesystem object */
     FRESULT fres=FR_NOT_READY;
     FIL *fp;
     uint8_t i=0,Verify=0;
@@ -238,7 +243,7 @@ static void Client_Rx78Tx79()
     sendbuf[15]=0x00;
     if(SD_CardIsInserted())
     {
-        fs = malloc(636);//malloc(sizeof (FATFS));
+//        fs = malloc(636);//malloc(sizeof (FATFS));
         fp = malloc(636);
         fres=f_mount(fs, "0:", 0);
         if(fres==FR_OK)
@@ -268,14 +273,14 @@ static void Client_Rx78Tx79()
             
             
             f_close(fp);
-            f_mount(0,"0:",0);
+//            f_mount(0,"0:",0);
         }
         if(savenum!=0)
         {
             sendbuf[15]=0x01;
         }
         free(fp);
-        free(fs);
+//        free(fs);
     }
     memcpy(sendbuf+16,&allpack,4);
     memcpy(sendbuf+20,&loclpack,4);
@@ -294,7 +299,7 @@ static void Client_Rx78Tx79()
 //
 static void Client_Rx80Tx81()
 {
-    FATFS *fs;     /* Ponter to the filesystem object */
+//    FATFS *fs;     /* Ponter to the filesystem object */
     FRESULT fres=FR_NOT_READY;
     FIL *fp;
     uint8_t i=0,Verify=0;
@@ -312,7 +317,7 @@ static void Client_Rx80Tx81()
     sendbuf[15]=0x00;
     if(SD_CardIsInserted())
     {
-        fs = malloc(636);//malloc(sizeof (FATFS));
+//        fs = malloc(636);//malloc(sizeof (FATFS));
         fp = malloc(636);
         fres=f_mount(fs, "0:", 0);
         if(fres==FR_OK)
@@ -339,14 +344,14 @@ static void Client_Rx80Tx81()
             
             
             f_close(fp);
-            f_mount(0,"0:",0);
+//            f_mount(0,"0:",0);
         }
         if(savenum!=0)
         {
             sendbuf[15]=0x01;
         }
         
-        free(fs);
+//        free(fs);
         free(fp);
     }
     memcpy(sendbuf+16,&allpack,4);
@@ -367,7 +372,7 @@ static void Client_Rx80Tx81()
 //
 static void Client_Rx72Tx73()
 {
-    FATFS *fs;
+//    FATFS *fs;
     uint8_t i=0,Verify=0;
     uint8_t sendbuf[20]={0};
     uint8_t fres;
@@ -380,7 +385,7 @@ static void Client_Rx72Tx73()
     sendbuf[15]=0x00;
     if(SD_CardIsInserted())
     {
-        fs = malloc(636);//malloc(sizeof (FATFS));
+//        fs = malloc(636);//malloc(sizeof (FATFS));
         fres=f_mount(fs, "0:", 0);
         if(fres==FR_OK)
         {
@@ -406,7 +411,7 @@ static void Client_Rx72Tx73()
                 sendbuf[15]=1;
             }
         }
-        free(fs);
+//        free(fs);
     }
     memcpy(sendbuf,&WLP_HEAD,4);
     memcpy(sendbuf+4,MHID,10);

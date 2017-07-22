@@ -15,17 +15,13 @@
 /*------------------------------------------------------------------------*/
 /* Allocate a memory block                                                */
 /*------------------------------------------------------------------------*/
-
+unsigned char Pool1[512],Pool2[512];
+unsigned char Used1,Used2;
 void* ff_memalloc (	/* Returns pointer to the allocated memory block (null on not enough core) */
 	UINT msize		/* Number of bytes to allocate */
 )
 {
-    //void* p;
-    if(msize==512)
-        return malloc(636);
-    else 
-        return malloc(msize);
-	//return p;	/* Allocate a new memory block with POSIX API */
+	return malloc(1020);	/* Allocate a new memory block with POSIX API */
 }
 
 

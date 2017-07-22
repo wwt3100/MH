@@ -11,6 +11,7 @@
 #include "MH-Struct.h"
 #include "stmflash.h"
 #include "mbuf.h"
+#include "elr_mpl.h"
 #include "rtc.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -29,6 +30,8 @@ uint32_t Led1Timer=0,Led2Timer=0,Led2Timer2=0,Led3Timer=0;
 volatile _HostStat hstat;
 volatile _GlobalConfig _gc;
 const _GlobalConfig c_gc __attribute__((at(0x08010000)));
+
+FATFS *fs;
 
 const _DeviceConfig cDc[255] __attribute__((at(0x08011000)))={0};
 const char MHID[]={"MH6001A001"};//__attribute__((at(0x08008000)))={"MH6001A001"};
@@ -72,6 +75,9 @@ static void gpio_init(void)
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING; 
     GPIO_Init(GPIOE, &GPIO_InitStructure);
     
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8 | GPIO_Pin_9 | GPIO_Pin_10 | GPIO_Pin_11 | GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15; //RJ45其他未用脚
+    GPIO_Init(GPIOE, &GPIO_InitStructure);
+    
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);
 	GPIO_EXTILineConfig(GPIO_PortSourceGPIOB, GPIO_PinSource15);
     EXTI_InitStructure.EXTI_Line=EXTI_Line15;
@@ -92,20 +98,20 @@ int main(void)
     uint8_t l=0;
     unsigned long long fre_clust,freespace;//,total;
     FRESULT fres=FR_INVALID_DRIVE;
-    FATFS *fs;
+    
     abuf=CreateAlarmbuf(60);
     memcpy((uint8_t*)&_gc,(uint8_t*)&c_gc,sizeof(_GlobalConfig));
     //_gc.RetryInterval=11;
     
     
-    fs=malloc(sizeof(FATFS));	    
+    fs=malloc(1020);	    
     SysTick_Init();
     NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);//设置中断优先级分组为组2：2位抢占优先级，2位响应优先级
 	gpio_init();
  	LED_Init();		  			//初始化与LED连接的硬件接口
     RTC_Init();
 	FLASH_Init();				//初始化W25Q128 
-    USART1_Init(38400);	 	//串口初始化为115200
+    USART1_Init(115200);	 	//串口初始化为115200
     USART2_Init(115200);	 	//串口初始化为115200
     USART3_Init(19200);
 	SD_Init();
@@ -114,7 +120,7 @@ int main(void)
     if(SD_CardIsInserted())
     {
         
-        fres=f_mount(fs,"0:",1); 					//挂载SD卡 		
+        fres=f_mount(fs,"0:",0); 					//挂载SD卡 		
         if(fres!=FR_OK)
             goto startupsderro;
         fres=f_getfree("0:",&fre_clust,&fs); 					//检测剩余空间
@@ -131,16 +137,15 @@ int main(void)
         {
             hstat.SDCardStat=fres;
         }
-        f_mount(0,"0:",1);
+//        f_mount(0,"0:",1);
 	}
     else    
     {
         startupsderro:
         hstat.SDCardStat=fres;
     }
-    free(fs);
     //timer_init(&Led3Timer,500);
-    LED2(1);
+    LED2(Bit_SET);
     //Usart2_SendData("AT+CSQ\r\n",8);
 	while(1)
 	{
@@ -164,13 +169,14 @@ int main(void)
         if(hstat.SDCardStat==FR_OK)
         {
             Led1Timer=0;
-            LED1(0);
+            LED1(Bit_RESET);
         }
         if(c_gc.MonitorDeviceNum>0) //没有仪器不采集
         {
             Server_Process(); 
             SMSAlarm_Process();     //短信报警
         }
+        SMSAlarm_GSMProcess();
         Client_Receive();
         if(timer_check(Led1Timer))
         {
@@ -180,6 +186,7 @@ int main(void)
         }
         
 	} 
+    free(fs);
 }
 
 

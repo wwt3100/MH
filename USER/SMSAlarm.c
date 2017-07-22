@@ -5,16 +5,19 @@
 extern _DeviceConfig cDc[255];
 extern _DeviceData _Dd[255];
 
+char* SMSAlarm_GetLine(void);
 
 uint8_t *SMSAlarmMessage=0;
 
 extern volatile _GlobalConfig _gc;
 extern volatile _HostStat hstat;
 
+extern FATFS *fs;
+
 __abuf *abuf=0;
 void SaveData2AlarmFile(uint8_t yn)
 {
-    FATFS *fs;     /* Ponter to the filesystem object */
+//    FATFS *fs;     /* Ponter to the filesystem object */
     uint32_t fres,wbt;
     DIR dj;         /* Directory search object */
     FILINFO *fno;    /* File information */
@@ -22,7 +25,7 @@ void SaveData2AlarmFile(uint8_t yn)
     uint32_t t;
     if(SD_CardIsInserted())
     {
-        fs = malloc(636);//malloc(sizeof (FATFS));
+//        fs = malloc(1020);//malloc(sizeof (FATFS));
         fp = malloc(636);
         fno= malloc(380);
         fres=f_mount(fs, "0:", 0);
@@ -55,8 +58,8 @@ void SaveData2AlarmFile(uint8_t yn)
                     break;
             }
         }
-        f_mount(0,"0:",0);
-        free(fs);
+//        f_mount(0,"0:",1);
+//        free(fs);
         free(fp);
         free(fno);
     }
@@ -189,7 +192,7 @@ uint8_t SMSAlarm_SetBuf()
     }
     else
     {
-        LED3(0);
+        LED3(Bit_RESET);
         AlarmBellTimer=0;
         GPIO_WriteBit(GPIOA,GPIO_Pin_4,Bit_RESET);
     }
@@ -264,18 +267,18 @@ void SMSAlarm_DoWork()
                 default:
                     break;
             }
-            ASCII2UNICODE();  //
+            //ASCII2UNICODE();  //
             sprintf(str+strlen(str),"%c",0x1a); //结束符
             strcat((char*)str,str1);
             Usart2_SendData(sendbuf,strlen((char*)sendbuf));
             //send SMS
             abuf->AlarmStat=eAlarmStat_Sending;
-            timer_init(&SMSAlarmTimeout,5000); 
+            timer_init(&SMSAlarmTimeout,60000); 
             free(sendbuf);
             break;
         case eAlarmStat_Sending:
             // Wait
-            if(timer_check(SMSAlarmTimeout)) //超时未发送成功
+            if(timer_check(SMSAlarmTimeout)) //超时未发送成功 60s
             {
                 abuf->AlarmStat=eAlarmStat_SendError;
             }
@@ -295,16 +298,129 @@ void SMSAlarm_DoWork()
     free(str);
     free(str1);
 }
+static uint16_t GSMWorkStat=0;
+static uint16_t lastcmd=0;
 void SMSAlarm_GSMProcess()
 {
-    
+    char *cmd;
+    cmd=SMSAlarm_GetLine();
+    if(cmd!=NULL)
+    {
+        switch(*cmd)
+        {
+            case 'A':
+                if(strcmp(cmd,"AT")==0)
+                {
+                    lastcmd=eGCMD_AT;
+                }
+                if(strcmp(cmd,"ATE0")==0)
+                {
+                    lastcmd=eGCMD_ATE;
+                }
+                break;
+            case '+':
+                if(strncmp(cmd,"+CMGS:",6)==0)
+                {
+                    lastcmd=eGCMD_CMGS;
+                    //send sms ok
+                    abuf->AlarmStat=eAlarmStat_SendOK;
+                }
+                if(strncmp(cmd,"+CMS ERROR",10)==0)
+                {
+                    lastcmd=eGCMD_CMGS;
+                    //send sms error
+                    abuf->AlarmStat=eAlarmStat_SendError;
+                }
+                if(strncmp(cmd,"+CMGF:0",7)==0)
+                {
+                    lastcmd=eGCMD_CMGF_R;
+                }
+                break;
+            case 'R':
+                if(strcmp(cmd,"RING")==0)
+                {
+                    Usart2_SendData("ATH\r\n",5);
+                }
+                break;
+            case 'O':
+                if(strcmp(cmd,"OK")==0)
+                {
+                    switch(lastcmd)
+                    {
+                        case eGCMD_AT:
+                            Usart2_SendData("ATE0&W\r\n",6);
+                            lastcmd=eGCMD_ATE;
+                            break;
+                        case eGCMD_CMGS:  //sms send ok
+                            break;
+                        case eGCMD_CMGF_R:
+                            Usart2_SendData("AT+CMGF=1\r\n",11);
+                            break;
+                        case eGCMD_ATE:
+                        case eGCMD_CMGF_W:
+                            Usart2_SendData("AT&W\r\n",6);
+                            lastcmd=eGCMD_AT_W;
+                            break;
+                        default:
+                            break;
+                    }
+                }
+                break;
+            case 'E':
+                if(strcmp(cmd,"ERROR")==0)
+                {
+                    //resend
+                    switch(lastcmd)
+                    {
+                        case eGCMD_AT:
+                            break;
+                        case eGCMD_CMGF_R:
+                            
+                            break;
+                        case eGCMD_ATE:
+                        case eGCMD_CMGF_W:
+                            break;
+                        default:
+                            break;
+                    }
+                    //Usart2_ResendData();
+                }
+                break;
+            default:
+                break;
+        }
+        free(cmd);
+    }
 }
+void SMSAlarm_GSMWorkStat()
+{
+    static uint32_t timeout=0;
+    switch(GSMWorkStat)
+    {
+        case 0:
+            if(timer_check_nolimit(timeout))
+            {
+                Usart2_SendData("AT\r\n",4);
+                timer_init(&timeout,10000);
+            }
+            break;
+        case 1:
+            if(timer_check_nolimit(timeout))
+            {
+                Usart1_SendData("AT+CMGF=?\r\n",11);
+                timer_init(&timeout,10000);
+            }
+            break;
+        default: //GSM系统正常运行
+            break;
+    }
+}
+
 
 void SMSAlarm_Process(void)
 {
     SMSAlarm_SetBuf();
     SMSAlarm_DoWork();
-    SMSAlarm_GSMProcess();
 }
 
 
@@ -322,6 +438,6 @@ __abuf* CreateAlarmbuf(uint16_t length)
 
 char* SMSAlarm_GetLine()
 {
-    
+    return NULL;
 }
 

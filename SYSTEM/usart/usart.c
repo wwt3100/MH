@@ -1,6 +1,8 @@
 #include "sys.h"
 #include "usart.h"	  
-
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 //////////////////////////////////////////////////////////////////
 //加入以下代码,支持printf函数,而不需要选择use MicroLIB	  
@@ -110,6 +112,8 @@ void Usart1_SendData(uint8_t *buffer,uint16_t len)
         while(USART_GetFlagStatus(USART1, USART_FLAG_TC) == RESET ); 	
     }
 }
+
+__mbuf *u2sendbuf;
 void USART2_Init(uint32_t band)
 {
 	GPIO_InitTypeDef GPIO_InitStructure;
@@ -149,21 +153,27 @@ void USART2_Init(uint32_t band)
    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
    NVIC_Init(&NVIC_InitStructure);
    u2mbuf=CreateMbuf(252);
+   u2sendbuf=CreateMbuf(1020);
    #ifdef _DEBUG
    gmbuf=CreateMbuf(1020);
    #endif
 }
+
 void Usart2_SendData(uint8_t *buffer,uint16_t len)
 {  
     uint16_t i;
-    if(len==17)
-        i=0;
+    u2sendbuf->datasize=len;
+    memcpy(u2sendbuf->pData,buffer,len);
     USART_ClearFlag(USART2,USART_FLAG_TC);	
     for(i=0;i<len;i++)
     {
         USART_SendData(USART2,*buffer++);	 
         while(USART_GetFlagStatus(USART2, USART_FLAG_TC) == RESET ); 	
     }
+}
+void Usart2_ResendData()
+{
+    Usart2_SendData(u2sendbuf->pData,u2sendbuf->datasize);
 }
 void USART3_Init(uint32_t band)
 {

@@ -3,11 +3,11 @@
 
 static DWORD SaveNumSize=0;
 extern volatile _HostStat hstat;
-
+extern FATFS *fs;
 
 void SaveData2RecodeFile(_DeviceData *dd)
 {
-    FATFS *fs;     /* Ponter to the filesystem object */
+//    FATFS *fs;     /* Ponter to the filesystem object */
     FRESULT fres=FR_INVALID_DRIVE;
     DIR dj={0};         /* Directory search object */
     FILINFO *fno;    /* File information */
@@ -15,7 +15,7 @@ void SaveData2RecodeFile(_DeviceData *dd)
     char filename[25]={0};
     if(SD_CardIsInserted())
     {
-        fs = malloc(636);//malloc(sizeof (FATFS));
+//        fs = malloc(1020);//malloc(sizeof (FATFS));
         fp = malloc(636);
         fno= malloc(380);
         fres=f_mount(fs, "0:", 0);
@@ -44,16 +44,17 @@ void SaveData2RecodeFile(_DeviceData *dd)
                 }
             }
         }
-        f_mount(0,"0:",0);
-        free(fs);
+        f_mount(0,"0:",1);
+//        free(fs);
         free(fp);
+        free(fno);
     }
     hstat.SDCardStat=fres;
 }
 
 void SaveData2TempFile(_DeviceData *dd)
 {
-    FATFS *fs;     /* Ponter to the filesystem object */
+//    FATFS *fs;     /* Ponter to the filesystem object */
     uint32_t fres=FR_INVALID_DRIVE,wbt;
     DIR dj;         /* Directory search object */
     FILINFO *fno;    /* File information */
@@ -61,7 +62,7 @@ void SaveData2TempFile(_DeviceData *dd)
     uint32_t t;
     if(SD_CardIsInserted())
     {
-        fs = malloc(636);//malloc(sizeof (FATFS));
+//        fs = malloc(1020);//malloc(sizeof (FATFS));
         fp = malloc(636);
         fno= malloc(380);
         fres=f_mount(fs, "0:", 0);
@@ -95,8 +96,8 @@ void SaveData2TempFile(_DeviceData *dd)
                     break;
             }
         }
-        f_mount(0,"0:",0);
-        free(fs);
+//        f_mount(0,"0:",1);
+//        free(fs);
         free(fp);
         free(fno);
     }
@@ -105,13 +106,13 @@ void SaveData2TempFile(_DeviceData *dd)
 
 FRESULT ReadTempFileSize(FSIZE_t *size)
 {
-    FATFS *fs;     /* Ponter to the filesystem object */
+//    FATFS *fs;     /* Ponter to the filesystem object */
     FRESULT fres=FR_INVALID_DRIVE;
     FIL *fp;
     *size=0;
     if(SD_CardIsInserted())
     {
-        fs = malloc(636);//malloc(sizeof (FATFS));
+//        fs = malloc(636);//malloc(sizeof (FATFS));
         fp = malloc(636);
         fres=f_mount(fs, "0:", 0);
         if(fres==FR_OK)
@@ -125,9 +126,9 @@ FRESULT ReadTempFileSize(FSIZE_t *size)
                     break;
             }
             f_close(fp);
-            f_mount(0,"0:",0);
+//            f_mount(0,"0:",0);
         }
-        free(fs);
+//        free(fs);
         free(fp);
     }
     hstat.SDCardStat=fres;
