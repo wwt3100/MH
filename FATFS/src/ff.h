@@ -303,6 +303,8 @@ DWORD get_fattime (void);
 WCHAR ff_oem2uni (WCHAR oem, WORD cp);	/* OEM code to Unicode conversion */
 WCHAR ff_uni2oem (WCHAR uni, WORD cp);	/* Unicode to OEM code conversion */
 WCHAR ff_wtoupper (WCHAR uni);			/* Unicode upper-case conversion */
+int dbc_1st (BYTE c);
+int dbc_2nd (BYTE c);
 #endif
 #if FF_USE_LFN == 3						/* Dynamic memory allocation */
 void* ff_memalloc (UINT msize);			/* Allocate memory block */

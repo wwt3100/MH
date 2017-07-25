@@ -78,21 +78,21 @@ static void gpio_init(void)
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8 | GPIO_Pin_9 | GPIO_Pin_10 | GPIO_Pin_11 | GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15; //RJ45其他未用脚
     GPIO_Init(GPIOE, &GPIO_InitStructure);
     
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);
-	GPIO_EXTILineConfig(GPIO_PortSourceGPIOB, GPIO_PinSource15);
-    EXTI_InitStructure.EXTI_Line=EXTI_Line15;
-    EXTI_InitStructure.EXTI_Mode=EXTI_Mode_Interrupt;
-    EXTI_InitStructure.EXTI_Trigger=EXTI_Trigger_Rising;
-    EXTI_InitStructure.EXTI_LineCmd=ENABLE;
-    EXTI_Init(&EXTI_InitStructure);
-    
-    NVIC_InitStructure.NVIC_IRQChannel = EXTI15_10_IRQn; //
-    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
-    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
-    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-    NVIC_Init(&NVIC_InitStructure);
+//    RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);
+//	GPIO_EXTILineConfig(GPIO_PortSourceGPIOB, GPIO_PinSource15);
+//    EXTI_InitStructure.EXTI_Line=EXTI_Line15;
+//    EXTI_InitStructure.EXTI_Mode=EXTI_Mode_Interrupt;
+//    EXTI_InitStructure.EXTI_Trigger=EXTI_Trigger_Rising;
+//    EXTI_InitStructure.EXTI_LineCmd=ENABLE;
+//    EXTI_Init(&EXTI_InitStructure);
+//    
+//    NVIC_InitStructure.NVIC_IRQChannel = EXTI15_10_IRQn; //
+//    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
+//    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+//    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+//    NVIC_Init(&NVIC_InitStructure);
 }
-
+uint32_t PowerDownTimer=0;
 int main(void)
 {	 
     uint8_t l=0;
@@ -115,7 +115,6 @@ int main(void)
     USART2_Init(115200);	 	//串口初始化为115200
     USART3_Init(19200);
 	SD_Init();
-    Usart2_SendData("AT\r\n",4);
     
     if(SD_CardIsInserted())
     {
@@ -171,11 +170,22 @@ int main(void)
             Led1Timer=0;
             LED1(Bit_RESET);
         }
-        if(c_gc.MonitorDeviceNum>0) //没有仪器不采集
+        if(c_gc.MonitorDeviceNum>0 && GPIO_ReadInputDataBit(GPIOB,GPIO_Pin_15)==RESET) //没有仪器不采集,停电不采集
         {
             Server_Process(); 
-            SMSAlarm_Process();     //短信报警
         }
+        if(GPIO_ReadInputDataBit(GPIOB,GPIO_Pin_15)==SET) //断电中
+        {
+            if(timer_check(PowerDownTimer)) //断电时间超过10秒
+            {
+                SMSAlarm(eAlarmType_PowerOff,0,0);
+            }
+        }
+        else
+        {
+            timer_init(&PowerDownTimer,10000); //断电定时
+        }
+        SMSAlarm_Process();     //短信报警
         SMSAlarm_GSMProcess();
         Client_Receive();
         if(timer_check(Led1Timer))

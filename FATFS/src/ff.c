@@ -675,7 +675,7 @@ int chk_chr (const char* str, int chr)	/* NZ:contained, ZR:not contained */
 
 
 /* Test if the character is DBC 1st byte */
-static
+//static
 int dbc_1st (BYTE c)
 {
 #if FF_CODE_PAGE == 0		/* Variable code page */
@@ -696,7 +696,7 @@ int dbc_1st (BYTE c)
 
 
 /* Test if the character is DBC 2nd byte */
-static
+//static
 int dbc_2nd (BYTE c)
 {
 #if FF_CODE_PAGE == 0		/* Variable code page */

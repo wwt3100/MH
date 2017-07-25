@@ -216,16 +216,16 @@ void USART3_IRQHandler (void)
         }
     }
 }
-uint8_t MH_PowerDown=0;
-void EXTI15_10_IRQHandler(void)
-{
-    //char sendbuf[64]="ZZZZZ#AT+SMSEND=\"";
-    if(EXTI_GetITStatus(EXTI_Line15)==SET)
-    {
-        EXTI_ClearITPendingBit(EXTI_Line15);
-        MH_PowerDown=1;
-    }
-}
+//uint8_t MH_PowerDown=0;
+//void EXTI15_10_IRQHandler(void)
+//{
+//    //char sendbuf[64]="ZZZZZ#AT+SMSEND=\"";
+//    if(EXTI_GetITStatus(EXTI_Line15)==SET)
+//    {
+//        EXTI_ClearITPendingBit(EXTI_Line15);
+//        MH_PowerDown=1;
+//    }
+//}
 /******************************************************************************/
 /*                 STM32F10x Peripherals Interrupt Handlers                   */
 /*  Add here the Interrupt Handler for the used peripheral(s) (PPP), for the  */

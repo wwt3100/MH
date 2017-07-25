@@ -27,6 +27,7 @@ enum eAlarmType
     eAlarmType_OverLimitRecovery,
     eAlarmType_Offline,
     eAlarmType_Online,
+    eAlarmType_PowerOff,
 };
 
 enum eAlarmGSMStat
@@ -44,6 +45,7 @@ enum eGSM_CMD
     eGCMD_CMGF_R,
     eGCMD_CMGF_W,
     eGCMD_AT_W,
+    eGCMD_CFUN,
 };
 
 #pragma pack(2)

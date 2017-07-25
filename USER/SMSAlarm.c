@@ -6,13 +6,14 @@ extern _DeviceConfig cDc[255];
 extern _DeviceData _Dd[255];
 
 char* SMSAlarm_GetLine(void);
-
+void ASCII2UNICODE(char* str)
 uint8_t *SMSAlarmMessage=0;
 
 extern volatile _GlobalConfig _gc;
 extern volatile _HostStat hstat;
 
 extern FATFS *fs;
+extern struct rtc_time systmtime;
 
 __abuf *abuf=0;
 void SaveData2AlarmFile(uint8_t yn)
@@ -102,6 +103,31 @@ uint8_t SMSAlarm(uint16_t type,uint16_t dev,uint8_t op)
                 }
             }
             break;
+        case eAlarmType_PowerOff:
+            while(buf->pNext!=NULL)
+            {
+                buf=buf->pNext;
+            }
+            for(i=0;i<5;i++)
+            {
+                if(_gc.PhoneNumber[i][0]!=0)
+                {
+                    buf->AlarmStat=eAlarmStat_Waiting;
+                    buf->AlarmType=type;
+                    buf->Option=op;
+                    memcpy(buf->PhoneNumber,(uint8_t*)_gc.PhoneNumber[i],16);
+                    to_tm(RTC_GetCounter(),&systmtime);
+                    buf->time[0]=systmtime.tm_year-2000;
+                    buf->time[1]=systmtime.tm_mon ;
+                    buf->time[2]=systmtime.tm_mday;
+                    buf->time[3]=systmtime.tm_hour;
+                    buf->time[4]=systmtime.tm_min ;
+                    buf->time[5]=systmtime.tm_sec ;
+                    buf->usable=1;
+                    buf->pNext=(__abuf*)CreateAlarmbuf(60);
+                    buf=buf->pNext;
+                }
+            }
         default:
             return 1;
     }
@@ -228,7 +254,7 @@ void SMSAlarm_DoWork()
     switch(abuf->AlarmStat)
     {
         case eAlarmStat_Waiting:
-            sendbuf=malloc(252);
+            sendbuf=malloc(124);
             strcpy((char*)sendbuf,"AT+CMGS=\"");
             strcat((char*)sendbuf,(char*)abuf->PhoneNumber);
             strcat((char*)sendbuf,"\"\r");
@@ -267,7 +293,7 @@ void SMSAlarm_DoWork()
                 default:
                     break;
             }
-            //ASCII2UNICODE();  //
+            ASCII2UNICODE(str);  //
             sprintf(str+strlen(str),"%c",0x1a); //结束符
             strcat((char*)str,str1);
             Usart2_SendData(sendbuf,strlen((char*)sendbuf));
@@ -335,6 +361,10 @@ void SMSAlarm_GSMProcess()
                 {
                     lastcmd=eGCMD_CMGF_R;
                 }
+                if(strncmp(cmd,"+CME ERROR:",11)==0)
+                {
+                    GSMWorkStat=99;
+                }
                 break;
             case 'R':
                 if(strcmp(cmd,"RING")==0)
@@ -361,6 +391,10 @@ void SMSAlarm_GSMProcess()
                             Usart2_SendData("AT&W\r\n",6);
                             lastcmd=eGCMD_AT_W;
                             break;
+                        case eGCMD_CFUN:
+                            Usart2_SendData("AT+CFUN=1\r\n",11);
+                            GSMWorkStat=0;
+                            break;
                         default:
                             break;
                     }
@@ -373,9 +407,11 @@ void SMSAlarm_GSMProcess()
                     switch(lastcmd)
                     {
                         case eGCMD_AT:
+                            GSMWorkStat=99; //极端情况断电重启
                             break;
                         case eGCMD_CMGF_R:
-                            
+                            Usart2_SendData("AT+CFUN=0\r\n",11);
+                            lastcmd=eGCMD_CFUN;
                             break;
                         case eGCMD_ATE:
                         case eGCMD_CMGF_W:
@@ -411,6 +447,22 @@ void SMSAlarm_GSMWorkStat()
                 timer_init(&timeout,10000);
             }
             break;
+        case 60:
+            timer_init(&timeout,2000);
+            GSMWorkStat=1;
+            break;
+        case 99:
+            GPIO_ResetBits(GPIOC,GPIO_Pin_6); //GSM断电
+            timer_init(&timeout,2000);
+            GSMWorkStat=100;
+            break;
+        case 100:
+            if(timer_check_nolimit(timeout))
+            {
+                GPIO_SetBits(GPIOC,GPIO_Pin_6); //上电
+                timer_init(&timeout,500);
+            }
+            break;
         default: //GSM系统正常运行
             break;
     }
@@ -438,6 +490,19 @@ __abuf* CreateAlarmbuf(uint16_t length)
 
 char* SMSAlarm_GetLine()
 {
+
     return NULL;
 }
-
+void ASCII2UNICODE(char* str)
+{
+    char* orgst;
+    orgst=malloc(124);
+    strcpy(orgst,str);
+    memset(str,0,124);
+    //    if (dbc_1st((BYTE)c) && i != 8 && i != 11 && dbc_2nd(dp->dir[i])) {
+//			c = c << 8 | dp->dir[i++];
+//		}
+//		c = ff_oem2uni(c, FF_CODE_PAGE);	/* OEM -> Unicode */
+//		if (!c) c = '?';
+    free(orgst);
+}
