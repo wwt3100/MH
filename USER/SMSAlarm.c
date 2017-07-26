@@ -4,9 +4,10 @@
 #include "led.h"
 extern _DeviceConfig cDc[255];
 extern _DeviceData _Dd[255];
+extern __mbuf *u1mbuf,*u2mbuf,*u3mbuf,*gmbuf;
 
 char* SMSAlarm_GetLine(void);
-void ASCII2UNICODE(char* str)
+void ASCII2UNICODE(char* str);
 uint8_t *SMSAlarmMessage=0;
 
 extern volatile _GlobalConfig _gc;
@@ -247,14 +248,15 @@ void SMSAlarm_DoWork()
     char *str,*str1;
     if(abuf->usable!=1)//|| GSMOK!=1)
         return;
-    str=malloc(124);
-    memset(str,0,124);
-    str1=malloc(124);
-    memset(str1,0,124);
+    str=malloc(252);
+    memset(str,0,252);
+//    str1=malloc(124);
+//    memset(str1,0,124);
     switch(abuf->AlarmStat)
     {
         case eAlarmStat_Waiting:
-            sendbuf=malloc(124);
+            sendbuf=malloc(252);
+            memset(sendbuf,0,252);
             strcpy((char*)sendbuf,"AT+CMGS=\"");
             strcat((char*)sendbuf,(char*)abuf->PhoneNumber);
             strcat((char*)sendbuf,"\"\r");
@@ -295,7 +297,7 @@ void SMSAlarm_DoWork()
             }
             ASCII2UNICODE(str);  //
             sprintf(str+strlen(str),"%c",0x1a); //结束符
-            strcat((char*)str,str1);
+            strcat((char*)sendbuf,str);
             Usart2_SendData(sendbuf,strlen((char*)sendbuf));
             //send SMS
             abuf->AlarmStat=eAlarmStat_Sending;
@@ -322,7 +324,7 @@ void SMSAlarm_DoWork()
             break;
     }
     free(str);
-    free(str1);
+//    free(str1);
 }
 static uint16_t GSMWorkStat=0;
 static uint16_t lastcmd=0;
@@ -365,9 +367,26 @@ void SMSAlarm_GSMProcess()
                 {
                     GSMWorkStat=99;
                 }
+                if(strncmp(cmd,"+CSMINS: 0,0",8))
+                {
+                    if(*(cmd+11)=='0')
+                    {
+                        GSMWorkStat=99;
+                    }
+                    else
+                    {
+                        
+                    }
+                }
                 break;
             case 'R':
                 if(strcmp(cmd,"RING")==0)
+                {
+                    Usart2_SendData("ATH\r\n",5);
+                }
+                break;
+            case 'S':
+                if(strcmp(cmd,"SMS Ready")==0)
                 {
                     Usart2_SendData("ATH\r\n",5);
                 }
@@ -443,6 +462,13 @@ void SMSAlarm_GSMWorkStat()
         case 1:
             if(timer_check_nolimit(timeout))
             {
+                Usart1_SendData("AT+CSMINS?\r\n",11);
+                timer_init(&timeout,10000);
+            }
+            break;
+        case 2:
+            if(timer_check_nolimit(timeout))
+            {
                 Usart1_SendData("AT+CMGF=?\r\n",11);
                 timer_init(&timeout,10000);
             }
@@ -490,19 +516,39 @@ __abuf* CreateAlarmbuf(uint16_t length)
 
 char* SMSAlarm_GetLine()
 {
-
+    static uint8_t *ptr=NULL;
+    if(ptr==NULL)
+        ptr=u2mbuf->pData;
+    if(*ptr==0)
+        return NULL;
     return NULL;
 }
+
+///////////////////////////////////////////////////////////////////
+// ASCII转Unicode 
+//  短信发送中文需要,输入字符串长度要小于252/4=63个字符
+//  
 void ASCII2UNICODE(char* str)
 {
-    char* orgst;
-    orgst=malloc(124);
+    uint8_t i=0;
+    char* orgst,*pt,*po;
+    WCHAR c;
+    orgst=malloc(252);
     strcpy(orgst,str);
-    memset(str,0,124);
-    //    if (dbc_1st((BYTE)c) && i != 8 && i != 11 && dbc_2nd(dp->dir[i])) {
-//			c = c << 8 | dp->dir[i++];
-//		}
-//		c = ff_oem2uni(c, FF_CODE_PAGE);	/* OEM -> Unicode */
-//		if (!c) c = '?';
+    memset(str,0,252);
+    pt=str;
+    po=orgst;
+    for(;i<strlen(orgst);i++)
+    {
+        c=*po++;
+        if (dbc_1st((BYTE)c) && i != 8 && i != 11 && dbc_2nd(*po)) {
+			c = c << 8 | *po;
+            i++;
+		}
+		c = ff_oem2uni(c, FF_CODE_PAGE);	/* OEM -> Unicode */
+		if (!c) c = '?';
+        sprintf(pt,"%04X",c);
+        pt+=4;
+    }
     free(orgst);
 }

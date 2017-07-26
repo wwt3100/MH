@@ -153,6 +153,7 @@ void USART2_Init(uint32_t band)
    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
    NVIC_Init(&NVIC_InitStructure);
    u2mbuf=CreateMbuf(252);
+   memset(u2mbuf->pData,0,252-sizeof(__mbuf));
    u2sendbuf=CreateMbuf(1020);
    #ifdef _DEBUG
    gmbuf=CreateMbuf(1020);
