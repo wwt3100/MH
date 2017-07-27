@@ -516,11 +516,19 @@ __abuf* CreateAlarmbuf(uint16_t length)
 
 char* SMSAlarm_GetLine()
 {
+    static const char endline[3]={0x0d,0x0a,0x00};
     static uint8_t *ptr=NULL;
+    char *p=NULL,*pr=NULL;
     if(ptr==NULL)
         ptr=u2mbuf->pData;
-    if(*ptr==0)
-        return NULL;
+    p=strstr((char*)ptr,endline);
+    if(p!=NULL)
+    {
+        pr=malloc(60);
+        memset(pr,0,60);
+        memcpy(pr,ptr,(uint8_t*)p-ptr);
+        ptr=(uint8_t*)p+2;
+    }
     return NULL;
 }
 

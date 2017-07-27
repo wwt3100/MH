@@ -185,8 +185,8 @@ int main(void)
         {
             timer_init(&PowerDownTimer,10000); //断电定时
         }
-        SMSAlarm_Process();     //短信报警
-        SMSAlarm_GSMProcess();
+//        SMSAlarm_Process();     //短信报警
+//        SMSAlarm_GSMProcess();
         Client_Receive();
         if(timer_check(Led1Timer))
         {
