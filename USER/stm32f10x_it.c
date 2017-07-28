@@ -157,6 +157,9 @@ void USART2_IRQHandler (void)
     __mbuf* buf = u2mbuf;
     uint8_t rtempdata;
     static uint16_t lenght=0,tail=0;
+    #ifdef _DEBUG
+    static uint32_t len=0;
+    #endif
     if(USART_GetFlagStatus(USART2,USART_IT_RXNE)==SET)
 	{
 		USART_ClearITPendingBit(USART2,USART_IT_RXNE); 
@@ -172,9 +175,12 @@ void USART2_IRQHandler (void)
         tail|=rtempdata;
         *(buf->pData+lenght++)=rtempdata;
         buf->datasize=lenght;
-        if((lenght>100 && tail==0x0d0a ) || lenght>124)
+        if(tail==0x0d0a || lenght>252)
+        //if((lenght>240 && tail==0x0d0a ) || lenght>250)
         {
-            buf->pNext=(__mbuf*)CreateMbuf(124);
+            *(buf->pData+lenght)=0;
+            buf->pNext=(__mbuf*)CreateMbuf(252);
+            buf->usable=1;
             tail=0;
             lenght=0;
         }    

@@ -65,7 +65,7 @@ static void gpio_init(void)
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6;
     GPIO_Init(GPIOC, &GPIO_InitStructure);					 //根据设定参数初始化GPIOD.8
-    GPIO_SetBits(GPIOC,GPIO_Pin_6);
+    GPIO_ResetBits(GPIOC,GPIO_Pin_6);
     
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_15;  //断电中断
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING; 
@@ -185,8 +185,9 @@ int main(void)
         {
             timer_init(&PowerDownTimer,10000); //断电定时
         }
-//        SMSAlarm_Process();     //短信报警
-//        SMSAlarm_GSMProcess();
+        SMSAlarm_Process();     //短信报警
+        SMSAlarm_GSMProcess();
+        SMSAlarm_GSMWorkStat();
         Client_Receive();
         if(timer_check(Led1Timer))
         {

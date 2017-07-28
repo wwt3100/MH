@@ -258,8 +258,10 @@ void SMSAlarm_DoWork()
             sendbuf=malloc(252);
             memset(sendbuf,0,252);
             strcpy((char*)sendbuf,"AT+CMGS=\"");
-            strcat((char*)sendbuf,(char*)abuf->PhoneNumber);
-            strcat((char*)sendbuf,"\"\r");
+            strcpy(str,(char*)abuf->PhoneNumber);
+            ASCII2UNICODE(str);
+            strcat((char*)sendbuf,str);
+            strcat((char*)sendbuf,"\"\n");
             sprintf(str,"20%02d-%02d-%02d %02d:%02d:%02d ",abuf->time[0],abuf->time[1],abuf->time[2],abuf->time[3],abuf->time[4],abuf->time[5]);
             //strcat((char*)sendbuf,str);
             strcat((char*)str,(char*)cDc[abuf->dev].DeviceName);
@@ -298,7 +300,7 @@ void SMSAlarm_DoWork()
             ASCII2UNICODE(str);  //
             sprintf(str+strlen(str),"%c",0x1a); //结束符
             strcat((char*)sendbuf,str);
-            Usart2_SendData(sendbuf,strlen((char*)sendbuf));
+            Usart2_SendData((char*)sendbuf,strlen((char*)sendbuf));
             //send SMS
             abuf->AlarmStat=eAlarmStat_Sending;
             timer_init(&SMSAlarmTimeout,60000); 
@@ -315,6 +317,7 @@ void SMSAlarm_DoWork()
         case eAlarmStat_SendError:
             //write data
             SaveData2AlarmFile(abuf->AlarmStat);
+            if(abuf->pNext==NULL && abuf->AlarmType==eAlarmType_PowerOff)
             //clean buffer
             tb=abuf->pNext;
             abuf->usable=0;
@@ -330,24 +333,32 @@ static uint16_t GSMWorkStat=0;
 static uint16_t lastcmd=0;
 void SMSAlarm_GSMProcess()
 {
+    __mbuf* tb;
     char *cmd;
-    cmd=SMSAlarm_GetLine();
-    if(cmd!=NULL)
+    if(u2mbuf->usable!=1)
+        return;
+    cmd=(char*)u2mbuf->pData;
+//    if(cmd!=NULL)
+    if(u2mbuf->datasize>2)
     {
         switch(*cmd)
         {
             case 'A':
-                if(strcmp(cmd,"AT")==0)
+                if(strncmp(cmd,"AT",2)==0)
                 {
-                    lastcmd=eGCMD_AT;
-                }
-                if(strcmp(cmd,"ATE0")==0)
-                {
-                    lastcmd=eGCMD_ATE;
+                    switch(*(cmd+2))
+                    {
+                        case 0x0d:
+                            lastcmd=eGCMD_AT_R;
+                            break;
+                        case 'E':
+                            lastcmd=eGCMD_ATE;
+                            break;
+                    }
                 }
                 break;
             case '+':
-                if(strncmp(cmd,"+CMGS:",6)==0)
+                if(strncmp(cmd,"+CMGS:",5)==0)
                 {
                     lastcmd=eGCMD_CMGS;
                     //send sms ok
@@ -355,64 +366,95 @@ void SMSAlarm_GSMProcess()
                 }
                 if(strncmp(cmd,"+CMS ERROR",10)==0)
                 {
-                    lastcmd=eGCMD_CMGS;
-                    //send sms error
-                    abuf->AlarmStat=eAlarmStat_SendError;
-                }
-                if(strncmp(cmd,"+CMGF:0",7)==0)
-                {
-                    lastcmd=eGCMD_CMGF_R;
-                }
-                if(strncmp(cmd,"+CME ERROR:",11)==0)
-                {
-                    GSMWorkStat=99;
-                }
-                if(strncmp(cmd,"+CSMINS: 0,0",8))
-                {
-                    if(*(cmd+11)=='0')
+                    switch(lastcmd)
                     {
-                        GSMWorkStat=99;
+                        case eGCMD_CMGS:
+                            //send sms error
+                            abuf->AlarmStat=eAlarmStat_SendError;
+                            break;
+                        default:
+                            break;
+                    }
+                }
+                if(strncmp(cmd,"+CMGF:0",5)==0)
+                {
+                    switch(*(cmd+7))
+                    {
+                        case '0':
+                            lastcmd=eGCMD_CMGF_R_0;
+                            GSMWorkStat=eGSMStat_Config;
+                            break;
+                        case '1':
+                            lastcmd=eGCMD_CMGF_R_1;
+                            GSMWorkStat=eGSMStat_Ready;
+                            break;
+                        default:
+                            break;
+                    }
+                }
+                if(strncmp(cmd,"+CPIN",5)==0)
+                {
+                    if(strstr(cmd,"READY")!=NULL)
+                    {
+                        GSMWorkStat=eGSMStat_CheckConfig;
                     }
                     else
                     {
-                        
+                        GSMWorkStat=eGSMStat_NoSIMCard;
                     }
                 }
+//                if(strncmp(cmd,"+CSMINS: 0,0",8))
+//                {
+//                    
+//                }
                 break;
             case 'R':
-                if(strcmp(cmd,"RING")==0)
+                if(strncmp(cmd,"RING",4)==0)
                 {
                     Usart2_SendData("ATH\r\n",5);
                 }
                 break;
             case 'S':
-                if(strcmp(cmd,"SMS Ready")==0)
+                if(strncmp(cmd,"SMS Ready",9)==0)
                 {
-                    Usart2_SendData("ATH\r\n",5);
+                    GSMWorkStat=eGSMStat_CheckConfig;
                 }
                 break;
             case 'O':
-                if(strcmp(cmd,"OK")==0)
+                if(strncmp(cmd,"OK",2)==0)
                 {
                     switch(lastcmd)
                     {
-                        case eGCMD_AT:
+                        case eGCMD_AT_R:
                             Usart2_SendData("ATE0&W\r\n",6);
                             lastcmd=eGCMD_ATE;
                             break;
+                        case eGCMD_AT:
+                            GSMWorkStat=eGSMStat_CheckSIMCARD;
+                            break;
+                        case eGCMD_CMGF_R_1:
+                        case eGCMD_AT_W:
+                            GSMWorkStat=eGSMStat_Ready;
+                            break;
                         case eGCMD_CMGS:  //sms send ok
                             break;
-                        case eGCMD_CMGF_R:
-                            Usart2_SendData("AT+CMGF=1\r\n",11);
+                        case eGCMD_CMGF_R_0:
+                            
                             break;
                         case eGCMD_ATE:
+                            GSMWorkStat=eGSMStat_CheckConfig;
+                            break;
                         case eGCMD_CMGF_W:
                             Usart2_SendData("AT&W\r\n",6);
                             lastcmd=eGCMD_AT_W;
                             break;
-                        case eGCMD_CFUN:
+                        case eGCMD_CFUN_0:
                             Usart2_SendData("AT+CFUN=1\r\n",11);
-                            GSMWorkStat=0;
+                            GSMWorkStat=eGSMStat_CheckSIMCARD;
+                            lastcmd=eGCMD_CFUN_1;
+                            break;
+                        case eGCMD_CFUN_1:
+                            //GSMWorkStat=eGSMStat_CheckSIMCARD;
                             break;
                         default:
                             break;
@@ -420,17 +462,15 @@ void SMSAlarm_GSMProcess()
                 }
                 break;
             case 'E':
-                if(strcmp(cmd,"ERROR")==0)
+                if(strncmp(cmd,"ERROR",5)==0)
                 {
                     //resend
                     switch(lastcmd)
                     {
-                        case eGCMD_AT:
-                            GSMWorkStat=99; //极端情况断电重启
-                            break;
-                        case eGCMD_CMGF_R:
-                            Usart2_SendData("AT+CFUN=0\r\n",11);
-                            lastcmd=eGCMD_CFUN;
+                        case eGCMD_CMGS:
+                        case eGCMD_CPIN:
+                        case eGCMD_CMGF_R_0:
+                            GSMWorkStat=eGSMStat_NoSIMCard;
                             break;
                         case eGCMD_ATE:
                         case eGCMD_CMGF_W:
@@ -444,8 +484,12 @@ void SMSAlarm_GSMProcess()
             default:
                 break;
         }
-        free(cmd);
+        //free(cmd);
     }
+    tb=u2mbuf->pNext;
+    u2mbuf->usable=0;
+    free(u2mbuf);
+    u2mbuf=tb;
 }
 void SMSAlarm_GSMWorkStat()
 {
@@ -453,40 +497,73 @@ void SMSAlarm_GSMWorkStat()
     switch(GSMWorkStat)
     {
         case 0:
-            if(timer_check_nolimit(timeout))
-            {
-                Usart2_SendData("AT\r\n",4);
-                timer_init(&timeout,10000);
-            }
+            GPIO_SetBits(GPIOC,GPIO_Pin_6); //上电
+            timer_init(&timeout,5000); //延时5秒
+            GSMWorkStat++;
             break;
         case 1:
             if(timer_check_nolimit(timeout))
             {
-                Usart1_SendData("AT+CSMINS?\r\n",11);
+                Usart2_SendData("AT\r\n",4);
+                lastcmd=eGCMD_AT;
                 timer_init(&timeout,10000);
             }
             break;
-        case 2:
-            if(timer_check_nolimit(timeout))
+        case eGSMStat_CheckSIMCARD:
+            //if(timer_check_nolimit(timeout))
             {
-                Usart1_SendData("AT+CMGF=?\r\n",11);
-                timer_init(&timeout,10000);
+            Usart2_SendData("AT+CPIN?\r\n",11);
+            timer_init(&timeout,10000);
+            lastcmd=eGCMD_CPIN;
+            GSMWorkStat++;
             }
             break;
-        case 60:
-            timer_init(&timeout,2000);
-            GSMWorkStat=1;
-            break;
-        case 99:
-            GPIO_ResetBits(GPIOC,GPIO_Pin_6); //GSM断电
-            timer_init(&timeout,2000);
-            GSMWorkStat=100;
-            break;
-        case 100:
+        case eGSMStat_CheckSIMCARDWait:
             if(timer_check_nolimit(timeout))
             {
-                GPIO_SetBits(GPIOC,GPIO_Pin_6); //上电
-                timer_init(&timeout,500);
+                GSMWorkStat--;
+            }
+            break;
+        case eGSMStat_CheckConfig:
+            //if(timer_check_nolimit(timeout))
+            {
+            Usart2_SendData("AT+CMGF?\r\n",11);
+            lastcmd=eGCMD_CMGF_R_0;
+            timer_init(&timeout,10000);
+            GSMWorkStat++;
+            }
+            break;
+        case eGSMStat_CheckConfigWait:
+            if(timer_check_nolimit(timeout))
+            {
+                GSMWorkStat--;
+            }
+            break;
+        case eGSMStat_Config:
+            Usart2_SendData("AT+CMGF=1\r\n",11);
+            lastcmd=eGCMD_CMGF_W;
+            timer_init(&timeout,10000);
+            GSMWorkStat++;
+            break;
+        case eGSMStat_ConfigWait:
+             if(timer_check_nolimit(timeout))
+            {
+                GSMWorkStat--;
+            }
+            break;
+        case eGSMStat_NoSIMCard:
+            if(timer_check_nolimit(timeout))
+            {
+            Usart2_SendData("AT+CFUN=0\r\n",11);
+            lastcmd=eGCMD_CFUN_0;
+            timer_init(&timeout,10000);
+            GSMWorkStat++;
+            }
+            break;
+        case eGSMStat_NoSIMCardWait:
+            if(timer_check_nolimit(timeout))
+            {
+                GSMWorkStat--;
             }
             break;
         default: //GSM系统正常运行
@@ -514,23 +591,23 @@ __abuf* CreateAlarmbuf(uint16_t length)
     return p;
 }
 
-char* SMSAlarm_GetLine()
-{
-    static const char endline[3]={0x0d,0x0a,0x00};
-    static uint8_t *ptr=NULL;
-    char *p=NULL,*pr=NULL;
-    if(ptr==NULL)
-        ptr=u2mbuf->pData;
-    p=strstr((char*)ptr,endline);
-    if(p!=NULL)
-    {
-        pr=malloc(60);
-        memset(pr,0,60);
-        memcpy(pr,ptr,(uint8_t*)p-ptr);
-        ptr=(uint8_t*)p+2;
-    }
-    return NULL;
-}
+//char* SMSAlarm_GetLine()
+//{
+//    static const char endline[3]={0x0d,0x0a,0x00};
+//    static uint8_t *ptr=NULL;
+//    char *p=NULL,*pr=NULL;
+//    if(ptr==NULL)
+//        ptr=u2mbuf->pData;
+//    p=strstr((char*)ptr,endline);
+//    if(p!=NULL)
+//    {
+//        pr=malloc(60);
+//        memset(pr,0,60);
+//        memcpy(pr,ptr,(uint8_t*)p-ptr);
+//        ptr=(uint8_t*)p+2;
+//    }
+//    return NULL;
+//}
 
 ///////////////////////////////////////////////////////////////////
 // ASCII转Unicode 

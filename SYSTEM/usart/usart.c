@@ -156,11 +156,11 @@ void USART2_Init(uint32_t band)
    memset(u2mbuf->pData,0,252-sizeof(__mbuf));
    u2sendbuf=CreateMbuf(1020);
    #ifdef _DEBUG
-   gmbuf=CreateMbuf(1020);
+   gmbuf=CreateMbuf(2044);
    #endif
 }
 
-void Usart2_SendData(uint8_t *buffer,uint16_t len)
+void Usart2_SendData(char *buffer,uint16_t len)
 {  
     uint16_t i;
     u2sendbuf->datasize=len;
@@ -174,7 +174,7 @@ void Usart2_SendData(uint8_t *buffer,uint16_t len)
 }
 void Usart2_ResendData()
 {
-    Usart2_SendData(u2sendbuf->pData,u2sendbuf->datasize);
+    Usart2_SendData((char*)u2sendbuf->pData,u2sendbuf->datasize);
 }
 void USART3_Init(uint32_t band)
 {
