@@ -40,18 +40,22 @@ extern uint8_t *SMSAlarmMessage;
 extern __mbuf *u1mbuf,*u2mbuf,*u3mbuf,*gmbuf;
 extern __abuf *abuf;
 
+extern uint16_t GSMWorkStat;
+
 extern struct rtc_time systmtime;
 
 static void gpio_init(void)
 {
-    EXTI_InitTypeDef EXTI_InitStructure;
+//    EXTI_InitTypeDef EXTI_InitStructure;
     GPIO_InitTypeDef  GPIO_InitStructure;
-    NVIC_InitTypeDef NVIC_InitStructure;
+//    NVIC_InitTypeDef NVIC_InitStructure;
  	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD, ENABLE);	 //使能PB端口时钟
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOE, ENABLE);
-	
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOF, ENABLE);
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOG, ENABLE);
+    
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8;				 
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP; 		 //推挽输出
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;		 //IO口速度为50MHz
@@ -78,6 +82,11 @@ static void gpio_init(void)
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8 | GPIO_Pin_9 | GPIO_Pin_10 | GPIO_Pin_11 | GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15; //RJ45其他未用脚
     GPIO_Init(GPIOE, &GPIO_InitStructure);
     
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_15;
+    GPIO_Init(GPIOF, &GPIO_InitStructure);
+    
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_1;
+    GPIO_Init(GPIOG, &GPIO_InitStructure);
 //    RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);
 //	GPIO_EXTILineConfig(GPIO_PortSourceGPIOB, GPIO_PinSource15);
 //    EXTI_InitStructure.EXTI_Line=EXTI_Line15;
@@ -95,7 +104,7 @@ static void gpio_init(void)
 uint32_t PowerDownTimer=0;
 int main(void)
 {	 
-    uint8_t l=0;
+    uint8_t l=0,k=1;
     unsigned long long fre_clust,freespace;//,total;
     FRESULT fres=FR_INVALID_DRIVE;
     
@@ -148,18 +157,30 @@ int main(void)
     //Usart2_SendData("AT+CSQ\r\n",8);
 	while(1)
 	{
-        if(timer_check_nolimit(Led2Timer))  //设备心跳灯
+        if(GSMWorkStat==eGSMStat_Ready)
         {
-            if(timer_check_nolimit(Led2Timer2))
+            if(timer_check_nolimit(Led2Timer))  //设备心跳灯
             {
-                timer_init(&Led2Timer,1500);
-                timer_init(&Led2Timer2,1550);
+                if(timer_check_nolimit(Led2Timer2))
+                {
+                    timer_init(&Led2Timer,1500);
+                    timer_init(&Led2Timer2,1550);
+                }
+                LED2(Bit_RESET);
             }
-            LED2(Bit_RESET);
+            else
+            {
+                LED2(Bit_SET);
+            }
         }
         else
         {
-            LED2(Bit_SET);
+            if(timer_check_nolimit(Led2Timer))
+            {
+                timer_init(&Led2Timer,1000);
+                (k==0)?(k=1):(k=0);
+                LED2(k);
+            }
         }
         if(hstat.SDCardStat!=FR_OK && Led1Timer==0)  //SD卡异常报警
         {
@@ -179,6 +200,11 @@ int main(void)
             if(timer_check(PowerDownTimer)) //断电时间超过10秒
             {
                 SMSAlarm(eAlarmType_PowerOff,0,0);
+                PowerDownTimer=0;
+            }
+            if(c_gc.MonitorDeviceNum==0)
+            {
+                GPIO_ResetBits(GPIOC,GPIO_Pin_6); //掉电自杀
             }
         }
         else
