@@ -29,10 +29,19 @@ uint32_t Led1Timer=0,Led2Timer=0,Led2Timer2=0,Led3Timer=0;
 //uint32_t SMSAlarmTimer=1;
 volatile _HostStat hstat;
 volatile _GlobalConfig _gc;
-const _GlobalConfig c_gc __attribute__((at(0x08010000)));
+const _GlobalConfig c_gc __attribute__((at(0x08010000)))={
+    .AlarmIntervalTime=1,
+    .OverLimitInterval=1,
+    .OfflineAlarmInterval=1,
+    .OverLimitONOFF=1,
+    .AlarmONOFF=1,
+    .OfflineAlarmONOFF=1,
+    .SMSAlarmNum=0,
+    .SamplingInterval=60,
+};
 
 FATFS *fs;
-
+const _HardwareInfo _hi __attribute__((at(0x08001000)))={0x80000000,0xC000000,0xFEDCBA98};
 const _DeviceConfig cDc[255] __attribute__((at(0x08011000)))={0};
 const char MHID[]={"MH6001A001"};//__attribute__((at(0x08008000)))={"MH6001A001"};
 _DeviceData _Dd[255]={0};
@@ -104,7 +113,7 @@ static void gpio_init(void)
 uint32_t PowerDownTimer=0;
 int main(void)
 {	 
-    uint8_t l=0,k=1;
+    uint8_t l=0,k=0;
     unsigned long long fre_clust,freespace;//,total;
     FRESULT fres=FR_INVALID_DRIVE;
     
@@ -203,6 +212,10 @@ int main(void)
                 PowerDownTimer=0;
             }
             if(c_gc.MonitorDeviceNum==0)
+            {
+                GPIO_ResetBits(GPIOC,GPIO_Pin_6); //掉电自杀
+            }
+            if(abuf->pNext==NULL && abuf->usable==0 && PowerDownTimer==0)
             {
                 GPIO_ResetBits(GPIOC,GPIO_Pin_6); //掉电自杀
             }

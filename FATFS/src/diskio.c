@@ -9,6 +9,7 @@
 
 #include "diskio.h"		/* FatFs lower layer API */
 #include "sdio_sdcard.h"
+#include "rtc.h"
 //#include "w25qxx.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -180,8 +181,16 @@ DRESULT disk_ioctl (
 	else res=RES_ERROR;//其他的不支持
     return res;
 }
-
+extern struct rtc_time systmtime;
 DWORD get_fattime (void)
-{				 
-	return 0;
+{	
+    DWORD time=0;
+    to_tm(RTC_GetCounter(), &systmtime);
+    time=(systmtime.tm_year-1980)<<25;
+    time|=(systmtime.tm_mon)<<21;
+    time|=(systmtime.tm_mday)<<16;
+    time|=(systmtime.tm_hour)<<11;
+    time|=(systmtime.tm_min)<<5;
+    time|=(systmtime.tm_sec/2);
+	return time;
 }

@@ -62,11 +62,12 @@ typedef struct GlobalConfig
     
 }_GlobalConfig;
 
-typedef enum
+typedef struct HardwareInfo
 {
-    e_Temp,
-    
-}e_DataType;
+    uint32_t SoftVer;
+    uint32_t HardVer;
+    uint32_t Check;
+}_HardwareInfo;
 
 typedef struct DeviceConfig
 {
@@ -86,6 +87,7 @@ typedef struct DeviceData
     int32_t Data2;
     uint8_t time[8];
     uint8_t Alram[4];   //[0]->offline   [1]->data1  [2]->data2
+    //uint8_t SMSAlarmNum[4];  
     uint32_t OfflineAlarmTimer;
     uint32_t Data1AlarmTimer;
     uint32_t Data2AlarmTimer;
