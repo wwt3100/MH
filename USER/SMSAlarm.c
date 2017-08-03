@@ -100,7 +100,26 @@ uint8_t SMSAlarm(uint16_t type,uint16_t dev,uint8_t op)
                     buf->Option=op;
                     buf->dev=dev;
                     memcpy(buf->PhoneNumber,(uint8_t*)_gc.PhoneNumber[i],16);
-                    memcpy(buf->time,_Dd[dev].time,8);
+                    switch(type)
+                    {
+                        case eAlarmType_Online:
+                        case eAlarmType_Offline:
+                            to_tm(RTC_GetCounter(), &systmtime);
+                            buf->time[0]=systmtime.tm_year-2000;
+                            buf->time[1]=systmtime.tm_mon ;
+                            buf->time[2]=systmtime.tm_mday;
+                            buf->time[3]=systmtime.tm_hour;
+                            buf->time[4]=systmtime.tm_min ;
+                            buf->time[5]=systmtime.tm_sec ;
+                            break;
+                        case eAlarmType_OverLimitRecovery:
+                        case eAlarmType_OverLimit:
+                            memcpy(buf->time,_Dd[dev].time,8);
+                            break;
+                        default:
+                            break;
+                    }
+                    
                     buf->Data1=_Dd[dev].Data1;
                     buf->Data2=_Dd[dev].Data2;
                     buf->Data1Max=cDc[dev].Data1Max;
@@ -238,7 +257,7 @@ uint8_t SMSAlarm_SetBuf()
     return 0;
 }
 volatile uint16_t GSMWorkStat=0;
-
+static uint16_t lastcmd=0;
 uint32_t SMSAlarmTimeout=0;
 void SMSAlarm_DoWork()
 {
@@ -320,6 +339,7 @@ void SMSAlarm_DoWork()
             sprintf(str+strlen(str),"%c",0x1a); //½áÊø·û
             strcat((char*)sendbuf,str);
             Usart2_SendData((char*)sendbuf,strlen((char*)sendbuf));
+            lastcmd=eGCMD_CMGS;
             //send SMS
             abuf->AlarmStat=eAlarmStat_Sending;
             timer_init(&SMSAlarmTimeout,60000); 
@@ -349,7 +369,7 @@ void SMSAlarm_DoWork()
 //    free(str1);
 }
 
-static uint16_t lastcmd=0;
+
 void SMSAlarm_GSMProcess()
 {
     __mbuf* tb;
@@ -493,6 +513,9 @@ void SMSAlarm_GSMProcess()
                     switch(lastcmd)
                     {
                         case eGCMD_CMGS:
+                            abuf->AlarmStat=eAlarmStat_SendError;
+                            GSMWorkStat=eGSMStat_CheckSIMCARD;
+                            break;
                         case eGCMD_CPIN:
                         case eGCMD_CMGF_R_0:
                             GSMWorkStat=eGSMStat_NoSIMCard;
