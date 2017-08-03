@@ -267,11 +267,9 @@ static void Client_Rx78Tx79()
             {
                 sendbuf[15]=0x00;
             }
-            f_lseek(fp,(loclpack-1)*18);
+            f_lseek(fp,(loclpack-1)*180);      //fix bug 文件指针移动位置错误
             f_read(fp,sendbuf+25,180,&savenum);
             sendbuf[24]=savenum/18;  //包中数据数量 重复利用savenum内存
-            
-            
             f_close(fp);
 //            f_mount(0,"0:",0);
         }
@@ -337,12 +335,13 @@ static void Client_Rx80Tx81()
             {
                 allpack++;
             }
-            
-            f_lseek(fp,(loclpack-1)*44);
+            if(loclpack-1>allpack)  //判断是否跃包
+            {
+                sendbuf[15]=0x00;
+            }
+            f_lseek(fp,(loclpack-1)*220);  //fix bug 文件指针移动位置错误
             f_read(fp,sendbuf+25,220,&savenum);
-            sendbuf[24]=savenum/44;  //包中数据数量 重复利用savenum内存
-            
-            
+            sendbuf[24]=savenum/44;  //包中数据数量 重复利用savenum内存      
             f_close(fp);
 //            f_mount(0,"0:",0);
         }

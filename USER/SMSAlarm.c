@@ -45,8 +45,17 @@ void SaveData2AlarmFile(uint8_t yn)
                     f_write(fp,&yn,1,&wbt);  //成功失败
                     f_write(fp,&abuf->AlarmType,1,&wbt);
                     f_write(fp,abuf->PhoneNumber,16,&wbt);
-                    f_write(fp,cDc[abuf->dev].ID,10,&wbt);
-                    t=TimeCompress(_Dd[abuf->dev].time);  //fix bug time ==0
+                    if(abuf->AlarmType == eAlarmType_PowerOff)
+                    {
+                        f_write(fp,MHID,10,&wbt);
+                        to_tm(RTC_GetCounter(), &systmtime);
+                        t=TimeCompress(NULL); 
+                    }
+                    else
+                    {
+                        f_write(fp,cDc[abuf->dev].ID,10,&wbt);
+                        t=TimeCompress(_Dd[abuf->dev].time);  //fix bug time ==0
+                    }                    
                     f_write(fp,&t,4,&wbt);
                     f_write(fp,&_Dd[abuf->dev].Data1,2,&wbt);
                     f_write(fp,&cDc[abuf->dev].Data1Max,2,&wbt);
@@ -258,7 +267,7 @@ void SMSAlarm_DoWork()
             str=malloc(508);
             memset(str,0,508);
             sendbuf=malloc(1020);
-            memset(sendbuf,0,1024);
+            memset(sendbuf,0,1020);
             strcpy((char*)sendbuf,"AT+CSMP=17,167,0,8\r\nAT+CMGS=\"");
             strcpy(str,(char*)abuf->PhoneNumber);
             ASCII2UNICODE(str);
@@ -328,10 +337,6 @@ void SMSAlarm_DoWork()
         case eAlarmStat_SendError:
             //write data
             SaveData2AlarmFile(abuf->AlarmStat);
-            if(abuf->pNext->usable==0 && abuf->AlarmType==eAlarmType_PowerOff)
-            {
-                GPIO_ResetBits(GPIOC,GPIO_Pin_6); //掉电自杀
-            }
             //clean buffer
             tb=abuf->pNext;
             abuf->usable=0;
@@ -694,5 +699,5 @@ void ASCII2UNICODE(char* str)
         sprintf(pt,"%04X",c);
         pt+=4;
     }
-    memset(orgst,0,256);
+    memset(orgst,0,252);
 }

@@ -168,7 +168,7 @@ uint8_t Server_Process()
                 free(u1mbuf);
                 u1mbuf=tb;
                 stat=e_Stat_PCMessageWait;
-                timer_init(&PCmsgtimeout,11*100);
+                timer_init(&PCmsgtimeout,15*100);
             }
             else
             {
