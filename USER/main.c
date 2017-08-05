@@ -25,7 +25,7 @@
 
 volatile uint32_t g_tick_1ms;
 
-uint32_t Led1Timer=0,Led2Timer=0,Led2Timer2=0,Led3Timer=0;
+uint32_t Led1Timer=0,Led1Timer2=0,Led2Timer=0,Led2Timer2=0,Led3Timer=0;
 //uint32_t SMSAlarmTimer=1;
 volatile _HostStat hstat;
 volatile _GlobalConfig _gc;
@@ -53,11 +53,13 @@ extern uint16_t GSMWorkStat;
 
 extern struct rtc_time systmtime;
 
+extern uint8_t stat;
+
 static void gpio_init(void)
 {
-//    EXTI_InitTypeDef EXTI_InitStructure;
+    EXTI_InitTypeDef EXTI_InitStructure;
     GPIO_InitTypeDef  GPIO_InitStructure;
-//    NVIC_InitTypeDef NVIC_InitStructure;
+    NVIC_InitTypeDef NVIC_InitStructure;
  	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD, ENABLE);	 //使能PB端口时钟
@@ -96,24 +98,25 @@ static void gpio_init(void)
     
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_1;
     GPIO_Init(GPIOG, &GPIO_InitStructure);
-//    RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);
-//	GPIO_EXTILineConfig(GPIO_PortSourceGPIOB, GPIO_PinSource15);
-//    EXTI_InitStructure.EXTI_Line=EXTI_Line15;
-//    EXTI_InitStructure.EXTI_Mode=EXTI_Mode_Interrupt;
-//    EXTI_InitStructure.EXTI_Trigger=EXTI_Trigger_Rising;
-//    EXTI_InitStructure.EXTI_LineCmd=ENABLE;
-//    EXTI_Init(&EXTI_InitStructure);
-//    
-//    NVIC_InitStructure.NVIC_IRQChannel = EXTI15_10_IRQn; //
-//    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
-//    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
-//    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-//    NVIC_Init(&NVIC_InitStructure);
+    
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);
+	GPIO_EXTILineConfig(GPIO_PortSourceGPIOC, GPIO_PinSource7);
+    EXTI_InitStructure.EXTI_Line=EXTI_Line7;
+    EXTI_InitStructure.EXTI_Mode=EXTI_Mode_Interrupt;
+    EXTI_InitStructure.EXTI_Trigger=EXTI_Trigger_Rising;
+    EXTI_InitStructure.EXTI_LineCmd=ENABLE;
+    EXTI_Init(&EXTI_InitStructure);
+    
+    NVIC_InitStructure.NVIC_IRQChannel = EXTI9_5_IRQn; //
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
+    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+    NVIC_Init(&NVIC_InitStructure);
 }
 uint32_t PowerDownTimer=0;
 int main(void)
 {	 
-    uint8_t l=0,k=0;
+    uint8_t l=0,k=0,j=0;
     unsigned long long fre_clust,freespace;//,total;
     FRESULT fres=FR_INVALID_DRIVE;
     
@@ -198,7 +201,21 @@ int main(void)
         if(hstat.SDCardStat==FR_OK)
         {
             Led1Timer=0;
-            LED1(Bit_RESET);
+            
+            if(stat==e_Stat_SampleingWait || stat==e_Stat_Sampling)
+            {
+                if(timer_check_nolimit(Led1Timer2))
+                {
+                    (j==0)?(j=1):(j=0);
+                    timer_init(&Led1Timer2,100);
+                    LED1(j);
+                }
+            }
+            else
+            {
+                LED1(Bit_RESET);
+            }
+                
         }
         if(c_gc.MonitorDeviceNum>0 && GPIO_ReadInputDataBit(GPIOB,GPIO_Pin_15)==RESET) //没有仪器不采集,停电不采集
         {

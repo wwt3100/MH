@@ -2,7 +2,7 @@
 #include "DataFile.h"
 #include "led.h" 
 
-static DWORD SaveNumSize=0;
+//static DWORD SaveNumSize=0;
 extern volatile _HostStat hstat;
 extern FATFS *fs;
 
@@ -109,7 +109,7 @@ void SaveData2TempFile(_DeviceData *dd)
 {
     uint32_t fres=FR_INVALID_DRIVE,wbt;
     //DIR dj;         /* Directory search object */
-    FILINFO *fno;    /* File information */
+    //FILINFO *fno;    /* File information */
     uint32_t t;
     static uint8_t SDStat;
     for(;;)
@@ -202,5 +202,11 @@ FRESULT ReadTempFileSize(FSIZE_t *size)
 //    return fres;
 //}
 
-
+void EXTI9_5_IRQHandler(void)
+{
+    if(EXTI_GetITStatus(EXTI_Line7)==SET)
+    {
+        f_sync(&sfp);
+    }
+}
 
