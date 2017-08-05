@@ -11,7 +11,11 @@
 #include "rtc.h"
 
 
-
+enum DataFileStat
+{
+    eSDStat_NotOpen=0,
+    eSDStat_Write,
+};
 
 
 
