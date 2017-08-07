@@ -57,9 +57,9 @@ extern uint8_t stat;
 
 static void gpio_init(void)
 {
-    EXTI_InitTypeDef EXTI_InitStructure;
+//    EXTI_InitTypeDef EXTI_InitStructure;
     GPIO_InitTypeDef  GPIO_InitStructure;
-    NVIC_InitTypeDef NVIC_InitStructure;
+//    NVIC_InitTypeDef NVIC_InitStructure;
  	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD, ENABLE);	 //使能PB端口时钟
@@ -99,19 +99,19 @@ static void gpio_init(void)
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_1;
     GPIO_Init(GPIOG, &GPIO_InitStructure);
     
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);
-	GPIO_EXTILineConfig(GPIO_PortSourceGPIOC, GPIO_PinSource7);
-    EXTI_InitStructure.EXTI_Line=EXTI_Line7;
-    EXTI_InitStructure.EXTI_Mode=EXTI_Mode_Interrupt;
-    EXTI_InitStructure.EXTI_Trigger=EXTI_Trigger_Rising;
-    EXTI_InitStructure.EXTI_LineCmd=ENABLE;
-    EXTI_Init(&EXTI_InitStructure);
+//    RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);
+//	GPIO_EXTILineConfig(GPIO_PortSourceGPIOC, GPIO_PinSource7);
+//    EXTI_InitStructure.EXTI_Line=EXTI_Line7;
+//    EXTI_InitStructure.EXTI_Mode=EXTI_Mode_Interrupt;
+//    EXTI_InitStructure.EXTI_Trigger=EXTI_Trigger_Rising;
+//    EXTI_InitStructure.EXTI_LineCmd=ENABLE;
+//    EXTI_Init(&EXTI_InitStructure);
     
-    NVIC_InitStructure.NVIC_IRQChannel = EXTI9_5_IRQn; //
-    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
-    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
-    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-    NVIC_Init(&NVIC_InitStructure);
+//    NVIC_InitStructure.NVIC_IRQChannel = EXTI9_5_IRQn; //
+//    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
+//    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+//    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+//    NVIC_Init(&NVIC_InitStructure);
 }
 uint32_t PowerDownTimer=0;
 int main(void)
@@ -202,8 +202,9 @@ int main(void)
         {
             Led1Timer=0;
             
-            if(stat==e_Stat_SampleingWait || stat==e_Stat_Sampling)
+            if(stat==e_Stat_SampleingWait)// || stat==e_Stat_Sampling)
             {
+                //LED1(Bit_SET);
                 if(timer_check_nolimit(Led1Timer2))
                 {
                     (j==0)?(j=1):(j=0);
@@ -214,6 +215,7 @@ int main(void)
             else
             {
                 LED1(Bit_RESET);
+                j=0;
             }
                 
         }
@@ -223,6 +225,7 @@ int main(void)
         }
         if(GPIO_ReadInputDataBit(GPIOB,GPIO_Pin_15)==SET) //断电中
         {
+            LED1(Bit_RESET);
             if(timer_check(PowerDownTimer)) //断电时间超过10秒
             {
                 SMSAlarm(eAlarmType_PowerOff,0,0);

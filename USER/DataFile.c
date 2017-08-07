@@ -202,11 +202,12 @@ FRESULT ReadTempFileSize(FSIZE_t *size)
 //    return fres;
 //}
 
-void EXTI9_5_IRQHandler(void)
-{
-    if(EXTI_GetITStatus(EXTI_Line7)==SET)
-    {
-        f_sync(&sfp);
-    }
-}
+//void EXTI9_5_IRQHandler(void)
+//{
+//    if(EXTI_GetITStatus(EXTI_Line7)==SET)
+//    {
+//        EXTI_ClearITPendingBit(EXTI_Line7);
+//        f_sync(&sfp);
+//    }
+//}
 
