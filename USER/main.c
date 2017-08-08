@@ -117,13 +117,22 @@ uint32_t PowerDownTimer=0;
 int main(void)
 {	 
     uint8_t l=0,k=0,j=0;
-    unsigned long long fre_clust,freespace;//,total;
-    FRESULT fres=FR_INVALID_DRIVE;
-    
+//    unsigned long long fre_clust,freespace;//,total;
+//    FRESULT fres=FR_INVALID_DRIVE;
+    RCC_LSICmd(ENABLE);
     abuf=CreateAlarmbuf(60);
     memcpy((uint8_t*)&_gc,(uint8_t*)&c_gc,sizeof(_GlobalConfig));
+    while(RCC_GetFlagStatus(RCC_FLAG_LSIRDY)==RESET);
     //_gc.RetryInterval=11;
+    #ifdef _DEBUG
+        DBGMCU_Config(DBGMCU_IWDG_STOP, ENABLE);  
+    #endif
     
+    IWDG_WriteAccessCmd(IWDG_WriteAccess_Enable);
+    IWDG_SetPrescaler(IWDG_Prescaler_32);
+    IWDG_SetReload(0xFFF); //2s ×óÓÒ
+    IWDG_ReloadCounter();
+    IWDG_Enable();
     
     fs=malloc(1020);	    
     SysTick_Init();
@@ -137,42 +146,44 @@ int main(void)
     USART3_Init(19200);
 	SD_Init();
     
-    if(SD_CardIsInserted())
-    {
-        
-        fres=f_mount(fs,"0:",0); 					//¹ÒÔØSD¿¨ 		
-        if(fres!=FR_OK)
-            goto startupsderro;
-        fres=f_getfree("0:",&fre_clust,&fs); 					//¼ì²âÊ£Óà¿Õ¼ä
-        if(fres==FR_OK)
-        {
-            //total = (fs->n_fatent - 2) * fs->csize;
-            freespace = fre_clust * fs->csize;
-            if(freespace<8192)      
-                hstat.SDCardStat=20;         //SD¿¨¿Õ¼ä²»×ã
-            else 
-                hstat.SDCardStat=fres;
-        }
-        else
-        {
-            hstat.SDCardStat=fres;
-        }
-//        f_mount(0,"0:",1);
-	}
-    else    
-    {
-        startupsderro:
-        hstat.SDCardStat=fres;
-    }
+//    if(SD_CardIsInserted())
+//    {
+//        
+//        fres=f_mount(fs,"0:",0); 					//¹ÒÔØSD¿¨ 		
+//        if(fres!=FR_OK)
+//            goto startupsderro;
+//        fres=f_getfree("0:",&fre_clust,&fs); 					//¼ì²âÊ£Óà¿Õ¼ä
+//        if(fres==FR_OK)
+//        {
+//            //total = (fs->n_fatent - 2) * fs->csize;
+//            freespace = fre_clust * fs->csize;
+//            if(freespace<8192)      
+//                hstat.SDCardStat=20;         //SD¿¨¿Õ¼ä²»×ã
+//            else 
+//                hstat.SDCardStat=fres;
+//        }
+//        else
+//        {
+//            hstat.SDCardStat=fres;
+//        }
+////        f_mount(0,"0:",1);
+//	}
+//    else    
+//    {
+//        startupsderro:
+//        hstat.SDCardStat=fres;
+//    }
     //timer_init(&Led3Timer,500);
     LED2(Bit_SET);
     //Usart2_SendData("AT+CSQ\r\n",8);
 	while(1)
 	{
+        //IWDG_ReloadCounter();   //Î¹¹·
         if(GSMWorkStat==eGSMStat_Ready)
         {
             if(timer_check_nolimit(Led2Timer))  //Éè±¸ÐÄÌøµÆ
             {
+                IWDG_ReloadCounter();  //Î¹¹·
                 if(timer_check_nolimit(Led2Timer2))
                 {
                     timer_init(&Led2Timer,1500);
@@ -189,16 +200,17 @@ int main(void)
         {
             if(timer_check_nolimit(Led2Timer))
             {
+                IWDG_ReloadCounter();  //Î¹¹·
                 timer_init(&Led2Timer,1000);
                 (k==0)?(k=1):(k=0);
                 LED2(k);
             }
         }
-        if(hstat.SDCardStat!=FR_OK && Led1Timer==0)  //SD¿¨Òì³£±¨¾¯
+        if((hstat.SDCardStat!=FR_OK ||GPIO_ReadInputDataBit(GPIOC,GPIO_Pin_7)==Bit_SET) && Led1Timer==0)  //SD¿¨Òì³£±¨¾¯
         {
-            timer_init(&Led1Timer,400);
+            timer_init(&Led1Timer,1000);
         }
-        if(hstat.SDCardStat==FR_OK)
+        if(hstat.SDCardStat==FR_OK && GPIO_ReadInputDataBit(GPIOC,GPIO_Pin_7)==Bit_RESET)
         {
             Led1Timer=0;
             

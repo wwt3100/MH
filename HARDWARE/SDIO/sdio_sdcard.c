@@ -102,7 +102,7 @@ SD_Error SD_Init(void)
 
 uint8_t SD_CardIsInserted()
 {
-    return GPIO_ReadInputDataBit(GPIOC,GPIO_Pin_7)?0:1;
+    return (GPIO_ReadInputDataBit(GPIOC,GPIO_Pin_7)==Bit_SET)?0:1;
 }
 
 //SDIO时钟初始化设置

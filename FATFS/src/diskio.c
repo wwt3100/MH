@@ -69,6 +69,7 @@ DRESULT disk_read (
 )
 {
 	u8 res=0; 
+    uint16_t timeout=0;
     if (!count)return RES_PARERR;//count不能等于0，否则返回参数错误		 	 
 	switch(pdrv)
 	{
@@ -78,7 +79,8 @@ DRESULT disk_read (
 			{
 				SD_Init();	//重新初始化SD卡
 				res=SD_ReadDisk(buff,sector,count);	
-				//printf("sd rd error:%d\r\n",res);
+                if(timeout++>100)
+                    break;
 			}
 			break;
 //		case EX_FLASH://外部flash

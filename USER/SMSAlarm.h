@@ -33,24 +33,17 @@ enum eAlarmType
 enum eAlarmGSMStat
 {
     eGSMStat_NoSIMCard=10,
-    eGSMStat_NoSIMCardWait,
     eGSMStat_CheckSIMCARD,
-    eGSMStat_CheckSIMCARDWait,
     eGSMStat_CheckConfig,
-    eGSMStat_CheckConfigWait,
     eGSMStat_CheckConfig2,
-    eGSMStat_CheckConfigWait2,
     eGSMStat_CheckGSMREG,
-    eGSMStat_CheckGSMREGWait,
     eGSMStat_Config,
-    eGSMStat_ConfigWait,
     eGSMStat_Config2,
-    eGSMStat_ConfigWait2,
     eGSMStat_CFUN1,
     eGSMStat_CFUN1Wait,
     eGSMStat_Ready,
     eGSMStat_AT,
-    eGSMStat_ATWait,
+    eGSMStat_Wait,
 };
 
 enum eGSM_CMD

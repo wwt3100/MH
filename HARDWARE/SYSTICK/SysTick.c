@@ -19,6 +19,7 @@ void SysTick_Init(void)
 {  
   if (SysTick_Config(SystemCoreClock / 1000U))
   {     
+      NVIC_SystemReset();
       while (1);			/* Capture error */ 
   }
 } 

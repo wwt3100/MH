@@ -26,7 +26,6 @@
 #include <stdio.h>
 #include "mbuf.h"
 #include "SMSAlarm.h"
-//#define _DEBUG 
  
 void NMI_Handler(void)
 {
@@ -157,14 +156,16 @@ void USART2_IRQHandler (void)
     __mbuf* buf = u2mbuf;
     uint8_t rtempdata;
     static uint16_t lenght=0,tail=0;
-    //static uint32_t len=0;
+    #ifdef _DEBUG
+        static uint32_t len=0;
+    #endif
     if(USART_GetFlagStatus(USART2,USART_IT_RXNE)==SET)
 	{
 		USART_ClearITPendingBit(USART2,USART_IT_RXNE); 
         rtempdata = USART_ReceiveData(USART2);	
-        //#ifdef _DEBUG
-        //*(gmbuf->pData+len++)=rtempdata;
-        //#endif
+        #ifdef _DEBUG
+        *(gmbuf->pData+len++)=rtempdata;
+        #endif
         while(buf->pNext!=NULL)
         {
             buf=buf->pNext;

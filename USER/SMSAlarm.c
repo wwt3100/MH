@@ -542,6 +542,7 @@ void SMSAlarm_GSMProcess()
 void SMSAlarm_GSMWorkStat()
 {
     static uint32_t timeout=0;
+    static uint8_t laststat=0;
     switch(GSMWorkStat)
     {
         case 0:
@@ -554,77 +555,43 @@ void SMSAlarm_GSMWorkStat()
             {
                 Usart2_SendData("AT\r\n",4);
                 lastcmd=eGCMD_AT;
-                timer_init(&timeout,10000);
+                timer_init(&timeout,5000);
             }
             break;
         case eGSMStat_CheckSIMCARD:
-            //if(timer_check_nolimit(timeout))
-            {
             Usart2_SendData("AT+CPIN?\r\n",11);
             timer_init(&timeout,10000);
             lastcmd=eGCMD_CPIN;
-            GSMWorkStat++;
-            }
-            break;
-        case eGSMStat_CheckSIMCARDWait:
-            if(timer_check_nolimit(timeout))
-            {
-                GSMWorkStat--;
-            }
+            GSMWorkStat=eGSMStat_Wait;
+            laststat=eGSMStat_CheckSIMCARD;
             break;
         case eGSMStat_CheckConfig:
-            //if(timer_check_nolimit(timeout))
-            {
             Usart2_SendData("AT+CMGF?\r\n",11);
             lastcmd=eGCMD_CMGF_R_0;
             timer_init(&timeout,10000);
-            GSMWorkStat++;
-            }
+            GSMWorkStat=eGSMStat_Wait;
+            laststat=eGSMStat_CheckConfig;
             break;
-        case eGSMStat_CheckConfigWait:
-            if(timer_check_nolimit(timeout))
-            {
-                GSMWorkStat--;
-            }
-            break;
-            case eGSMStat_CheckConfig2:
-            //if(timer_check_nolimit(timeout))
-            {
+        case eGSMStat_CheckConfig2:
             Usart2_SendData("AT+CSCS?\r\n",11);
             lastcmd=eGCMD_CSCS_R;
             timer_init(&timeout,10000);
-            GSMWorkStat++;
-            }
-            break;
-        case eGSMStat_CheckConfigWait2:
-            if(timer_check_nolimit(timeout))
-            {
-                GSMWorkStat--;
-            }
+            GSMWorkStat=eGSMStat_Wait;
+            laststat=eGSMStat_CheckConfig2;
             break;
         case eGSMStat_Config:
             Usart2_SendData("AT+CMGF=1\r\n",11);
             lastcmd=eGCMD_CMGF_W;
             timer_init(&timeout,10000);
-            GSMWorkStat++;
+            GSMWorkStat=eGSMStat_Wait;
+            laststat=eGSMStat_Config;
             break;
-        case eGSMStat_ConfigWait:
-             if(timer_check_nolimit(timeout))
-            {
-                GSMWorkStat--;
-            }
-            break;
-            case eGSMStat_Config2:
+        case eGSMStat_Config2:
             Usart2_SendData("AT+CSCS=\"UCS2\"\r\n",16);
             lastcmd=eGCMD_CSCS_W;
             timer_init(&timeout,10000);
-            GSMWorkStat++;
-            break;
-        case eGSMStat_ConfigWait2:
-             if(timer_check_nolimit(timeout))
-            {
-                GSMWorkStat--;
-            }
+            GSMWorkStat=eGSMStat_Wait;
+            laststat=eGSMStat_Config2;
             break;
         case eGSMStat_NoSIMCard:
             if(timer_check_nolimit(timeout))
@@ -632,13 +599,14 @@ void SMSAlarm_GSMWorkStat()
             Usart2_SendData("AT+CFUN=0\r\n",11);
             lastcmd=eGCMD_CFUN_0;
             timer_init(&timeout,10000);
-            GSMWorkStat++;
+            GSMWorkStat=eGSMStat_Wait;
+            laststat=eGSMStat_NoSIMCard;
             }
             break;
-        case eGSMStat_NoSIMCardWait:
+        case eGSMStat_Wait:
             if(timer_check_nolimit(timeout))
             {
-                GSMWorkStat--;
+                GSMWorkStat=laststat;
             }
             break;
         case eGSMStat_CFUN1:
@@ -651,6 +619,7 @@ void SMSAlarm_GSMWorkStat()
                 GSMWorkStat=eGSMStat_CheckSIMCARD;
             }
             break;
+
         default: //GSM系统正常运行
             break;
     }

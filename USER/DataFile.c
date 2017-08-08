@@ -165,8 +165,12 @@ FRESULT ReadTempFileSize(FSIZE_t *size)
     FRESULT fres=FR_INVALID_DRIVE;
     FILINFO *fno;
     fno = malloc(380);
+    memset(fno,0,380);
     fres=f_stat(".Tempdata",fno);
-    *size=fno->fsize;
+    if(fres==FR_OK)   //fix bug ¶ÁÈ¡Êý¾Ý´íÎó
+        *size=fno->fsize;
+    else
+        *size=0;
     free(fno);
     return fres;
 }
