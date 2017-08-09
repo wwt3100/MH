@@ -55,7 +55,7 @@ uint8_t Server_Process()
             }
             else
             {
-                timer_init(&timeout,11*100);
+                timer_init(&timeout,15*100);
                 stat=e_Stat_SampleingWait;
                 Server_Send67((cDc[dev].ID));
                 //Server_Send67("HS500BS657"); //for test

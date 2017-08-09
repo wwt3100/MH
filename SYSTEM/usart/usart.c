@@ -149,7 +149,7 @@ void USART2_Init(uint32_t band)
     
    NVIC_InitStructure.NVIC_IRQChannel = USART2_IRQn; //
    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
-   NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1;
+   NVIC_InitStructure.NVIC_IRQChannelSubPriority = 2;
    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
    NVIC_Init(&NVIC_InitStructure);
    u2mbuf=CreateMbuf(252);
@@ -219,7 +219,7 @@ void USART3_Init(uint32_t band)
    USART_ITConfig(USART3,USART_IT_RXNE,ENABLE); 
 
    NVIC_InitStructure.NVIC_IRQChannel = USART3_IRQn; //
-   NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
+   NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 3;
    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
    NVIC_Init(&NVIC_InitStructure);

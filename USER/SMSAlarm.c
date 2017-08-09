@@ -99,6 +99,7 @@ uint8_t SMSAlarm(uint16_t type,uint16_t dev,uint8_t op)
                     buf->AlarmType=type;
                     buf->Option=op;
                     buf->dev=dev;
+                    memcpy(buf->DeviceName,cDc[dev].DeviceName,24);
                     memcpy(buf->PhoneNumber,(uint8_t*)_gc.PhoneNumber[i],16);
                     switch(type)
                     {
@@ -127,7 +128,7 @@ uint8_t SMSAlarm(uint16_t type,uint16_t dev,uint8_t op)
                     buf->Data2Max=cDc[dev].Data2Max;
                     buf->Data2Min=cDc[dev].Data2Min;
                     buf->usable=1;
-                    buf->pNext=(__abuf*)CreateAlarmbuf(60);
+                    buf->pNext=(__abuf*)CreateAlarmbuf(124);
                     buf=buf->pNext;
                 }
             }
@@ -153,7 +154,7 @@ uint8_t SMSAlarm(uint16_t type,uint16_t dev,uint8_t op)
                     buf->time[4]=systmtime.tm_min ;
                     buf->time[5]=systmtime.tm_sec ;
                     buf->usable=1;
-                    buf->pNext=(__abuf*)CreateAlarmbuf(60);
+                    buf->pNext=(__abuf*)CreateAlarmbuf(124);
                     buf=buf->pNext;
                 }
             }
@@ -299,7 +300,7 @@ void SMSAlarm_DoWork()
             switch(abuf->AlarmType)
             {
                 case eAlarmType_OverLimit:
-                    strcat((char*)str,(char*)cDc[abuf->dev].DeviceName);
+                    strcat((char*)str,(char*)abuf->DeviceName);
                     if(abuf->Option==1)
                     {
                         sprintf(str+strlen(str)," 温度超限:%d.%d ℃ (↓%d.%d,↑%d.%d)",abuf->Data1/10,abuf->Data1%10,abuf->Data1Min/10,abuf->Data1Min%10,abuf->Data1Max/10,abuf->Data1Max%10);
@@ -310,7 +311,7 @@ void SMSAlarm_DoWork()
                     }
                     break;
                 case eAlarmType_OverLimitRecovery:
-                    strcat((char*)str,(char*)cDc[abuf->dev].DeviceName);
+                    strcat((char*)str,(char*)abuf->DeviceName);
                     if(abuf->Option==1)
                     {
                         strcat(str," 温度恢复 超限报警解除!");
@@ -321,11 +322,11 @@ void SMSAlarm_DoWork()
                     }
                     break;
                 case eAlarmType_Offline:
-                    strcat((char*)str,(char*)cDc[abuf->dev].DeviceName);
-                    strcat((char*)str," 设备掉线");
+                    strcat((char*)str,(char*)abuf->DeviceName);
+                    strcat((char*)str," 设备掉线!");
                     break;
                 case eAlarmType_Online:
-                    strcat((char*)str,(char*)cDc[abuf->dev].DeviceName);
+                    strcat((char*)str,(char*)abuf->DeviceName);
                     strcat((char*)str," 设备上线恢复正常!");
                     break;
                 case eAlarmType_PowerOff:

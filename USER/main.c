@@ -29,7 +29,7 @@ uint32_t Led1Timer=0,Led1Timer2=0,Led2Timer=0,Led2Timer2=0,Led3Timer=0;
 //uint32_t SMSAlarmTimer=1;
 volatile _HostStat hstat;
 volatile _GlobalConfig _gc;
-const _GlobalConfig c_gc __attribute__((at(0x08010000)))={
+const _GlobalConfig c_gc __attribute__((at(0x08038000)))={
     .AlarmIntervalTime=1,
     .OverLimitInterval=1,
     .OfflineAlarmInterval=1,
@@ -42,8 +42,8 @@ const _GlobalConfig c_gc __attribute__((at(0x08010000)))={
 
 FATFS *fs;
 const _HardwareInfo _hi __attribute__((at(0x08001000)))={0x80000000,0xC000000,0xFEDCBA98};
-const _DeviceConfig cDc[255] __attribute__((at(0x08011000)))={0};
-const char MHID[]={"MH6001A001"};//__attribute__((at(0x08008000)))={"MH6001A001"};
+const _DeviceConfig cDc[255] __attribute__((at(0x08040000)))={0};
+const char MHID[] __attribute__((at(0x08039000)))={"MH6001A001"};
 _DeviceData _Dd[255]={0};
 extern uint8_t *SMSAlarmMessage;
 extern __mbuf *u1mbuf,*u2mbuf,*u3mbuf,*gmbuf;
@@ -120,7 +120,7 @@ int main(void)
 //    unsigned long long fre_clust,freespace;//,total;
 //    FRESULT fres=FR_INVALID_DRIVE;
     RCC_LSICmd(ENABLE);
-    abuf=CreateAlarmbuf(60);
+    abuf=CreateAlarmbuf(124);
     memcpy((uint8_t*)&_gc,(uint8_t*)&c_gc,sizeof(_GlobalConfig));
     while(RCC_GetFlagStatus(RCC_FLAG_LSIRDY)==RESET);
     //_gc.RetryInterval=11;
