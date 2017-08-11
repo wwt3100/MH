@@ -53,6 +53,7 @@ extern uint16_t GSMWorkStat;
 
 extern struct rtc_time systmtime;
 
+extern uint8_t NotConfiging;  //不在配置中
 extern uint8_t stat;
 
 static void gpio_init(void)
@@ -142,7 +143,7 @@ int main(void)
     RTC_Init();
 	FLASH_Init();				//初始化W25Q128 
     USART1_Init(115200);	 	//串口初始化为115200
-    USART2_Init(115200);	 	//串口初始化为115200
+    USART2_Init(9600);	 	//串口初始化为115200
     USART3_Init(19200);
 	SD_Init();
     
@@ -231,7 +232,7 @@ int main(void)
             }
                 
         }
-        if(c_gc.MonitorDeviceNum>0 && GPIO_ReadInputDataBit(GPIOB,GPIO_Pin_15)==RESET) //没有仪器不采集,停电不采集
+        if(c_gc.MonitorDeviceNum>0 && GPIO_ReadInputDataBit(GPIOB,GPIO_Pin_15)==RESET &&NotConfiging==1) //没有仪器不采集,停电不采集
         {
             Server_Process(); 
         }

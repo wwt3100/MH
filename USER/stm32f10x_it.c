@@ -112,7 +112,7 @@ void RTC_IRQHandler(void)
     }
   }
 }
-
+extern uint8_t NotConfiging;
 __mbuf *u1mbuf,*u2mbuf,*u3mbuf,*gmbuf;
 void USART1_IRQHandler (void)
 {
@@ -123,6 +123,7 @@ void USART1_IRQHandler (void)
     if(USART_GetFlagStatus(USART1,USART_IT_RXNE)==SET)
 	{
 		USART_ClearITPendingBit(USART1,USART_IT_RXNE); 
+        NotConfiging=0;
 		rtempdata = USART_ReceiveData(USART1);
         if(head != 0x01167b28)
         {
@@ -131,6 +132,7 @@ void USART1_IRQHandler (void)
         }
         else
         {
+            
             while(buf->pNext!=NULL)
             {
                 buf=buf->pNext;

@@ -92,7 +92,7 @@ void USART1_Init(uint32_t band)
 //   USART_ClearITPendingBit(USART1,USART_IT_IDLE);
     NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
    NVIC_InitStructure.NVIC_IRQChannel = USART1_IRQn; //
-   NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
+   NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1;
    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
    NVIC_Init(&NVIC_InitStructure);

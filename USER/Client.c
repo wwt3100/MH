@@ -38,6 +38,7 @@ extern const char MHID[12];
 extern uint32_t SamplingIntervalTimer;
 
 extern FATFS *fs;
+uint8_t NotConfiging;
 ///////////////////////////////////////////////////////////////
 // ÉèÖÃÃüÁî Check OK
 //
@@ -135,7 +136,11 @@ static void Client_Rx34Tx35(uint8_t Veri)
     {
         sen=u1mbuf->pData[13];
         num=u1mbuf->pData[14];
-        SamplingIntervalTimer=0;//ÅäÖÃÒÇÆ÷Ê±ÔÝÍ£²É¼¯
+        _gc.MonitorDeviceNum=0;
+        if(u1mbuf->pData[12]==1)
+        {
+            memset(_Dd,0,sizeof(_DeviceData)*255);
+        }
         if(u1mbuf->pData[12]==sen)
         {
             _gc.MonitorDeviceNum=((sen-1)*4)+num;
@@ -490,7 +495,7 @@ uint8_t Client_Receive()
                 Client_Rx32Tx33(Verify); //¶ÁÈ¡ÉèÖÃÐÅÏ¢
                 break;
             case 0x34:
-                if(u1mbuf->datasize!=212)
+                if(u1mbuf->datasize!=212 && u1mbuf->datasize!=116 && u1mbuf->datasize!=164 && u1mbuf->datasize!=68)
                     Verify=0;
                 Client_Rx34Tx35(Verify); //ÅäÖÃÒÇÆ÷
                 break;
@@ -533,5 +538,6 @@ uint8_t Client_Receive()
     u1mbuf->usable=0;
     free(u1mbuf);
     u1mbuf=tb;
+    NotConfiging=1;
     return ret;
 }
