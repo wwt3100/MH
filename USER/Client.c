@@ -482,6 +482,7 @@ uint8_t Client_Receive()
     {
         Verify=1;
     }
+    NotConfiging=1;
     if(memcmp(MHID,(u1mbuf->pData),10)==0 || u1mbuf->pData[0]==0)//序列号相同    //如果是发给管理主机的信息
     {
         switch(*(u1mbuf->pData+10))
@@ -538,6 +539,6 @@ uint8_t Client_Receive()
     u1mbuf->usable=0;
     free(u1mbuf);
     u1mbuf=tb;
-    NotConfiging=1;
+    
     return ret;
 }

@@ -7,7 +7,7 @@
 
 
 uint8_t Server_Process(void);
-
+uint8_t Server_Process_Li(void);
 __inline static void __485SetReceive()
 {
     GPIO_ResetBits(GPIOD,GPIO_Pin_8);

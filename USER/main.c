@@ -236,6 +236,10 @@ int main(void)
         {
             Server_Process(); 
         }
+        if(c_gc.MonitorDeviceNum==0 && NotConfiging==1)
+        {
+            Server_Process_Li();
+        }
         if(GPIO_ReadInputDataBit(GPIOB,GPIO_Pin_15)==SET) //∂œµÁ÷–
         {
             LED1(Bit_RESET);

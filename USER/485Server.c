@@ -168,7 +168,7 @@ uint8_t Server_Process()
                 free(u1mbuf);
                 u1mbuf=tb;
                 stat=e_Stat_PCMessageWait;
-                timer_init(&PCmsgtimeout,15*100);
+                timer_init(&PCmsgtimeout,20*100);
             }
             else
             {
@@ -188,6 +188,53 @@ uint8_t Server_Process()
             break;
     }
     
+    return stat;
+}
+uint8_t Server_Process_Li()
+{
+    __mbuf* tb;
+    static uint8_t laststat=0;
+    static uint8_t stat_l=e_Stat_Idle;
+    switch(stat_l)
+    {
+        case e_Stat_Idle:
+            if(hstat.ClientStat==CST_ClientHasData)
+            {
+                laststat=e_Stat_Idle;
+                stat_l=e_Stat_PCMessage;
+            }
+            break;
+        case e_Stat_PCMessage:
+            if(u1mbuf->usable==1)
+            {
+                __485SetSend();
+                Usart3_SendData((uint8_t*)&WLP_HEAD,4); //Send PC Message
+                Usart3_SendData(u1mbuf->pData,u1mbuf->datasize);//Send PC Message
+                __485SetReceive();
+                tb=u1mbuf->pNext;
+                u1mbuf->usable=0;
+                free(u1mbuf);
+                u1mbuf=tb;
+                stat_l=e_Stat_PCMessageWait;
+                timer_init(&PCmsgtimeout,20*100);
+            }
+            else
+            {
+                hstat.ClientStat=CST_ClientNoData;
+                stat=laststat;
+            }
+            break;
+        case e_Stat_PCMessageWait:
+            if(Server_Receive()==1 || timer_check(PCmsgtimeout))
+            {
+                stat_l=laststat;
+                hstat.ClientStat=CST_ClientNoData;
+            }
+            break;
+        default:
+            stat_l=e_Stat_Idle;
+            break;
+    }
     return stat;
 }
 void Server_Send67(uint8_t *pID)
