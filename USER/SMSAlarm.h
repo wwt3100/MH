@@ -28,6 +28,7 @@ enum eAlarmType
     eAlarmType_Offline,
     eAlarmType_Online,
     eAlarmType_PowerOff,
+    eAlarmType_PowerOn,
 };
 
 enum eAlarmGSMStat
@@ -74,7 +75,7 @@ typedef struct TAlrmbuf
     uint8_t AlarmType; //报警类型
     uint8_t Option; //其他选项
     uint8_t dev;
-    uint8_t DeviceName[24]; 
+    uint8_t DeviceName[26]; 
     uint8_t PhoneNumber[16];
     uint8_t time[8];
     int16_t Data1;

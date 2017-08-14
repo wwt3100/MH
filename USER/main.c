@@ -43,7 +43,7 @@ const _GlobalConfig c_gc __attribute__((at(0x08038000)))={
 FATFS *fs;
 const _HardwareInfo _hi __attribute__((at(0x08001000)))={0x80000000,0xC000000,0xFEDCBA98};
 const _DeviceConfig cDc[255] __attribute__((at(0x08040000)))={0};
-const char MHID[] __attribute__((at(0x08039000)))={"MH6001A203"};
+const char MHID[] __attribute__((at(0x08039000)))={"MH6001A201"};
 _DeviceData _Dd[255]={0};
 extern uint8_t *SMSAlarmMessage;
 extern __mbuf *u1mbuf,*u2mbuf,*u3mbuf,*gmbuf;
@@ -115,6 +115,7 @@ static void gpio_init(void)
 //    NVIC_Init(&NVIC_InitStructure);
 }
 uint32_t PowerDownTimer=0;
+uint32_t StartUptimer=0;
 int main(void)
 {	 
     uint8_t l=0,k=0,j=0;
@@ -176,10 +177,16 @@ int main(void)
 //    }
     //timer_init(&Led3Timer,500);
     LED2(Bit_SET);
-    //Usart2_SendData("AT+CSQ\r\n",8);
+
+    timer_init(&StartUptimer,6000);
 	while(1)
 	{
         //IWDG_ReloadCounter();   //Î¹¹·
+        if(timer_check(StartUptimer)||(GSMWorkStat==eGSMStat_Ready&&StartUptimer!=0))
+        {
+            StartUptimer=0;
+            SMSAlarm(eAlarmType_PowerOn,0,0);
+        }
         if(GSMWorkStat==eGSMStat_Ready)
         {
             if(timer_check_nolimit(Led2Timer))  //Éè±¸ÐÄÌøµÆ

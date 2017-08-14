@@ -514,6 +514,12 @@ uint8_t Client_Receive()
             case 0x72:
                 Client_Rx72Tx73(Verify); //数据删除
                 break;
+            case 0xCC:                   //重新刷序列号
+                if(Verify==1 && *(u1mbuf->pData+11)==0x55)
+                {
+                    STMFLASH_Write((uint32_t)MHID,(uint16_t*)(u1mbuf->pData+12),10);
+                }
+                break;
             default:
                 break;
         }
@@ -522,9 +528,7 @@ uint8_t Client_Receive()
 //    {
 //        switch(*(u1mbuf->pData+10))
 //        {
-//            case 0xCC:
-
-//                break;
+//            
 //            default:
 //                break;
 //        }
