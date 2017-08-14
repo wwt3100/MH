@@ -196,11 +196,14 @@ uint8_t SMSAlarm_SetBuf()
         if(timer_check((_Dd[dev].Data1AlarmTimer)) && _Dd[dev].Alram[1]<_gc.SMSAlarmNum+1)
         {
             timer_init_sp(&_Dd[dev].Data1AlarmTimer,_gc.AlarmIntervalTime*60000);
-            _Dd[dev].Alram[1]+=1; 
-            SMSAlarm(eAlarmType_OverLimit,dev,1);  //超限报警
-            if(_Dd[dev].Alram[1]==1)
+            if(_Dd[dev].Data1>cDc[dev].Data1Max || _Dd[dev].Data1<cDc[dev].Data1Min)  //消除偶发性不超限报警的情况
             {
-                AlarmOn++;
+                _Dd[dev].Alram[1]+=1; 
+                SMSAlarm(eAlarmType_OverLimit,dev,1);  //超限报警
+                if(_Dd[dev].Alram[1]==1)
+                {
+                    AlarmOn++;
+                }
             }
         }
         if(_Dd[dev].Alram[1]>0 && _Dd[dev].Data1AlarmTimer==0) //使用nolimit timer可能为零  fixed:初始化使用_sp函数
@@ -212,11 +215,29 @@ uint8_t SMSAlarm_SetBuf()
         if(timer_check((_Dd[dev].Data2AlarmTimer)) && _Dd[dev].Alram[2]<_gc.SMSAlarmNum+1)
         {
             timer_init_sp(&_Dd[dev].Data2AlarmTimer,_gc.AlarmIntervalTime*60000);
-            _Dd[dev].Alram[2]+=1; 
-            SMSAlarm(eAlarmType_OverLimit,dev,2); //超限报警
-            if(_Dd[dev].Alram[2]==1)
+            if(_Dd[dev].Data2>cDc[dev].Data2Max || _Dd[dev].Data2<cDc[dev].Data2Min)
             {
-                AlarmOn++;
+                switch(_Dd[dev].ID[11])
+                {
+                    case 1:                    //温湿度
+                        _Dd[dev].Alram[2]+=1; 
+                        SMSAlarm(eAlarmType_OverLimit,dev,2); //超限报警
+                        if(_Dd[dev].Alram[2]==1)
+                        {
+                            AlarmOn++;
+                        }
+                        break;
+                    case 3:                     //双温
+                        _Dd[dev].Alram[2]+=1; 
+                        SMSAlarm(eAlarmType_OverLimit,dev,1); //超限报警
+                        if(_Dd[dev].Alram[2]==1)
+                        {
+                            AlarmOn++;
+                        }
+                        break;
+                    default:
+                        break;
+                }
             }
         }
         if(_Dd[dev].Alram[2]>0 && _Dd[dev].Data2AlarmTimer==0)

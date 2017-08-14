@@ -281,6 +281,7 @@ uint8_t Server_Receive()
                 {
                     case 25:  
                         memcpy(&(_Dd[dev].ID[0]),u3mbuf->pData,10);
+                        _Dd[dev].ID[11]=*(u3mbuf->pData+11);            //ID多余的byte存储仪器类型
                         memcpy(&(_Dd[dev].Data1),u3mbuf->pData+12,4);
                         memcpy(&(_Dd[dev].Data2),u3mbuf->pData+16,2);
                         ret=1;
