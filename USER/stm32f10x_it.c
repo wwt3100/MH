@@ -132,7 +132,6 @@ void USART1_IRQHandler (void)
         }
         else
         {
-            
             while(buf->pNext!=NULL)
             {
                 buf=buf->pNext;
