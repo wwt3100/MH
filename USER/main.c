@@ -37,7 +37,7 @@ const _GlobalConfig c_gc __attribute__((at(0x08038000)))={
     .AlarmONOFF=1,
     .OfflineAlarmONOFF=1,
     .SMSAlarmNum=0,
-    .SamplingInterval=60,
+    .SamplingInterval=1,
 };
 
 FATFS *fs;
