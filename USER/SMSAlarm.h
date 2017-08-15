@@ -29,6 +29,7 @@ enum eAlarmType
     eAlarmType_Online,
     eAlarmType_PowerOff,
     eAlarmType_PowerOn,
+    eAlarmType_GoodStat,
 };
 
 enum eAlarmGSMStat
@@ -63,6 +64,7 @@ enum eGSM_CMD
     eGCMD_CFUN_0,
     eGCMD_CFUN_1,
     eGCMD_CPIN,
+    eGCMD_CREG_R,
 };
 
 #pragma pack(2)

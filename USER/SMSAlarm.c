@@ -385,6 +385,10 @@ void SMSAlarm_DoWork()
                     strcat((char*)str,MHID);
                     strcat((char*)str," HE2435管理主机恢复供电!!!");
                     break;
+                case eAlarmType_GoodStat:
+                    strcat((char*)str,MHID);
+                    strcat((char*)str," HE2435管理主机正在稳定运行!!!");
+                    break;
                 default:
                     break;
             }
@@ -503,7 +507,23 @@ void SMSAlarm_GSMProcess()
                     }
                     else
                     {
-                        GSMWorkStat=eGSMStat_Ready;
+                        GSMWorkStat=eGSMStat_CheckGSMREG;
+                    }
+                }
+                if(strncmp(cmd,"+CREG",5)==0)
+                {
+                    switch(*(cmd+9))
+                    {
+                        case '1':
+                        case '5':
+                            GSMWorkStat=eGSMStat_Ready;
+                            break;
+                        case '2':
+                            GSMWorkStat=eGSMStat_Wait;
+                            break;
+                        default:
+                            GSMWorkStat=eGSMStat_NoSIMCard;
+                            break;
                     }
                 }
                 break;
@@ -513,12 +533,12 @@ void SMSAlarm_GSMProcess()
                     Usart2_SendData("ATH\r\n",5);
                 }
                 break;
-            case 'S':
-                if(strncmp(cmd,"SMS Ready",9)==0)
-                {
-                    GSMWorkStat=eGSMStat_CheckConfig;
-                }
-                break;
+//            case 'S':
+//                if(strncmp(cmd,"SMS Ready",9)==0)
+//                {
+//                    GSMWorkStat=eGSMStat_Ready;
+//                }
+//                break;
             case 'O':
                 if(strncmp(cmd,"OK",2)==0)
                 {
@@ -532,7 +552,7 @@ void SMSAlarm_GSMProcess()
                             GSMWorkStat=eGSMStat_CheckSIMCARD;
                             break;
                         case eGCMD_AT_W:
-                            GSMWorkStat=eGSMStat_Ready;
+                            GSMWorkStat=eGSMStat_CheckGSMREG;
                             break;
                         case eGCMD_CMGS:  //sms send ok
                             break;
@@ -571,6 +591,7 @@ void SMSAlarm_GSMProcess()
                             break;
                         case eGCMD_CPIN:
                         case eGCMD_CMGF_R_0:
+                        case eGCMD_CREG_R:
                             GSMWorkStat=eGSMStat_NoSIMCard;
                             break;
                         case eGCMD_ATE:
@@ -645,6 +666,13 @@ void SMSAlarm_GSMWorkStat()
             timer_init(&timeout,10000);
             GSMWorkStat=eGSMStat_Wait;
             laststat=eGSMStat_Config2;
+            break;
+        case eGSMStat_CheckGSMREG:
+            Usart2_SendData("AT+CREG?\r\n",10);
+            lastcmd=eGCMD_CREG_R;
+            timer_init(&timeout,3000);
+            GSMWorkStat=eGSMStat_Wait;
+            laststat=eGSMStat_CheckGSMREG;
             break;
         case eGSMStat_NoSIMCard:
             if(timer_check_nolimit(timeout))

@@ -43,7 +43,7 @@ const _GlobalConfig c_gc __attribute__((at(0x08038000)))={
 FATFS *fs;
 const _HardwareInfo _hi __attribute__((at(0x08001000)))={0x80000000,0xC000000,0xFEDCBA98};
 const _DeviceConfig cDc[255] __attribute__((at(0x08040000)))={0};
-const char MHID[] __attribute__((at(0x08039000)))={"MH6001A201"};
+const char MHID[] __attribute__((at(0x08039000)))={"MH6001A202"};
 _DeviceData _Dd[255]={0};
 extern uint8_t *SMSAlarmMessage;
 extern __mbuf *u1mbuf,*u2mbuf,*u3mbuf,*gmbuf;
@@ -178,11 +178,11 @@ int main(void)
     //timer_init(&Led3Timer,500);
     LED2(Bit_SET);
 
-    timer_init(&StartUptimer,6000);
+    timer_init(&StartUptimer,60000);
 	while(1)
 	{
         //IWDG_ReloadCounter();   //Î¹¹·
-        if(timer_check(StartUptimer)||(GSMWorkStat==eGSMStat_Ready&&StartUptimer!=0))
+        if(timer_check(StartUptimer) && StartUptimer!=0)//|| ( GSMWorkStat==eGSMStat_Ready&&StartUptimer!=0))
         {
             StartUptimer=0;
             SMSAlarm(eAlarmType_PowerOn,0,0);

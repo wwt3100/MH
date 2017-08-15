@@ -45,7 +45,7 @@ void SaveData2RecodeFile(_DeviceData *dd)
                 }
             }
         }
-        f_mount(0,"0:",1);
+//        f_mount(0,"0:",1);
 //        free(fs);
         free(fp);
         free(fno);
