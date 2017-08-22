@@ -39,6 +39,7 @@ _DeviceData ts;
 volatile uint8_t stat=0,resend=0,dev=0;
 uint32_t timeout=0,PCmsgtimeout=0;
 uint32_t SamplingIntervalTimer=1;
+uint32_t OneSecTimer=0;
 extern uint8_t *SMSAlarmMessage;
 uint8_t MustSave=0;
 uint8_t Server_Process()
@@ -55,11 +56,7 @@ uint8_t Server_Process()
             }
             else
             {
-                timer_init(&timeout,15*100);
-                stat=e_Stat_SampleingWait;
-                Server_Send67((cDc[dev].ID));
-                //Server_Send67("HS500BS657"); //for test
-                if(resend++>=2)  //如果发送2次没有收到回复
+                if(resend>=3)  //如果发送2次没有收到回复
                 {
                     
                     if(_Dd[dev].Alram[0]==0 && _Dd[dev].OfflineAlarmTimer==0)
@@ -74,6 +71,13 @@ uint8_t Server_Process()
                         //timer_init(&SamplingIntervalTimer,_gc.SamplingInterval*1000); //设置采样间隔
                         stat=e_Stat_Idle;
                     }
+                }
+                else
+                {
+                    Server_Send67((cDc[dev].ID));
+                    timer_init(&timeout,15*100);
+                    stat=e_Stat_SampleingWait;
+                    resend++;
                 }
             }
             break;
@@ -144,15 +148,17 @@ uint8_t Server_Process()
             }
             else
             {
-                if(timer_check(SamplingIntervalTimer))
+                if(timer_check_nolimit(OneSecTimer))
                 {
-                    dev=0;
-                    stat=e_Stat_Sampling;
-                    timer_init(&SamplingIntervalTimer,_gc.SamplingInterval*60000); //设置采样间隔
-//                    if(SMSAlarmMessage!=NULL)
-//                    {
-//                        SMSAlarmMessage=malloc(248);
-//                    }
+                    timer_init(&OneSecTimer,500);
+                    to_tm(RTC_GetCounter(),&systmtime);
+                    if(timer_check(SamplingIntervalTimer)&&systmtime.tm_sec==0)
+                    {
+                        dev=0;
+                        stat=e_Stat_Sampling;
+                        timer_init(&SamplingIntervalTimer,_gc.SamplingInterval*60000-1); //设置采样间隔
+                        
+                    }
                 }
             }
             break;

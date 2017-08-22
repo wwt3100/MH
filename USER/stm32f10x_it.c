@@ -97,13 +97,14 @@ void SysTick_Handler(void)
 {
 	g_tick_1ms++;
 }
-
+extern struct rtc_time systmtime;
 void RTC_IRQHandler(void)
 {
   if (RTC_GetITStatus(RTC_IT_SEC) != RESET)
   {	     
     RTC_ClearITPendingBit(RTC_IT_SEC);		/* Clear the RTC Second interrupt */ 
 	//Updata_1sec(&Timer); 
+    //to_tm(RTC_GetCounter(),&systmtime);
     RTC_WaitForLastTask();					/* Wait until last write operation on RTC registers has finished */	    
     if (RTC_GetCounter() == 0x00015180)		/* Reset RTC Counter when Time is 23:59:59 */
     {
