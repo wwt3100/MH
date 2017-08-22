@@ -148,18 +148,18 @@ uint8_t Server_Process()
             }
             else
             {
-                if(timer_check_nolimit(OneSecTimer))
-                {
-                    timer_init(&OneSecTimer,500);
-                    to_tm(RTC_GetCounter(),&systmtime);
-                    if(timer_check(SamplingIntervalTimer)&&systmtime.tm_sec==0)
+//                if(timer_check_nolimit(OneSecTimer))
+//                {
+//                    timer_init(&OneSecTimer,100);
+//                    to_tm(RTC_GetCounter(),&systmtime);
+                    if(timer_check(SamplingIntervalTimer)&&(RTC_GetCounter()%60==0))
                     {
                         dev=0;
                         stat=e_Stat_Sampling;
                         timer_init(&SamplingIntervalTimer,_gc.SamplingInterval*60000-1); //设置采样间隔
                         
                     }
-                }
+//                }
             }
             break;
         case e_Stat_PCMessage:

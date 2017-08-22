@@ -166,7 +166,7 @@ void USART2_IRQHandler (void)
 		USART_ClearITPendingBit(USART2,USART_IT_RXNE); 
         rtempdata = USART_ReceiveData(USART2);	
         #ifdef _DEBUG
-        *(gmbuf->pData+len++)=rtempdata;
+        //*(gmbuf->pData+len++)=rtempdata;
         #endif
         while(buf->pNext!=NULL)
         {

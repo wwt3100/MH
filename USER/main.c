@@ -128,14 +128,17 @@ int main(void)
     //_gc.RetryInterval=11;
     #ifdef _DEBUG
         DBGMCU_Config(DBGMCU_IWDG_STOP, ENABLE);  
-    #endif
-    
+    #else
     IWDG_WriteAccessCmd(IWDG_WriteAccess_Enable);
     IWDG_SetPrescaler(IWDG_Prescaler_32);
     IWDG_SetReload(0xFFF); //2s 左右
     IWDG_ReloadCounter();
     IWDG_Enable();
-    
+    #endif
+    if(RCC_GetFlagStatus(RCC_FLAG_IWDGRST)==SET) //狗复位不提示
+    {
+        timer_init(&StartUptimer,60000);
+    }
     fs=malloc(1020);	    
     SysTick_Init();
     NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);//设置中断优先级分组为组2：2位抢占优先级，2位响应优先级
@@ -178,7 +181,7 @@ int main(void)
     //timer_init(&Led3Timer,500);
     LED2(Bit_SET);
 
-    timer_init(&StartUptimer,60000);
+    
 	while(1)
 	{
         //IWDG_ReloadCounter();   //喂狗

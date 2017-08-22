@@ -32,6 +32,7 @@ extern struct rtc_time systmtime;
 extern volatile _GlobalConfig _gc;
 extern _GlobalConfig c_gc;
 extern _HostStat hstat;
+extern uint32_t AlarmOn;
 
 extern const char MHID[12];
 
@@ -140,6 +141,9 @@ static void Client_Rx34Tx35(uint8_t Veri)
         if(u1mbuf->pData[12]==1)
         {
             memset(_Dd,0,sizeof(_DeviceData)*255);
+            AlarmOn=0;
+            _gc.MonitorDeviceNum=0;
+            STMFLASH_Write((uint32_t)&c_gc,(uint16_t*)&_gc,sizeof(_GlobalConfig));
         }
         if(u1mbuf->pData[12]==sen)
         {

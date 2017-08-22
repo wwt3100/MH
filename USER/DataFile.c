@@ -14,11 +14,14 @@ void SaveData2RecodeFile(_DeviceData *dd)
     FILINFO *fno;    /* File information */
     FIL *fp;
     char filename[25]={0};
+    char *str;
+    UINT wbt;
     if(SD_CardIsInserted())
     {
 //        fs = malloc(1020);//malloc(sizeof (FATFS));
         fp = malloc(636);
         fno= malloc(380);
+        str=malloc(124);
         fres=f_mount(fs, "0:", 0);
         if(fres==FR_OK)
         {
@@ -37,16 +40,19 @@ void SaveData2RecodeFile(_DeviceData *dd)
                 fres=f_open(fp,filename,FA_OPEN_APPEND | FA_WRITE | FA_READ);   //打开文件,如果不存在则新建
                 if(fres==FR_OK)
                 {
-                    f_printf(fp,"%d-%d-%d\t",dd->time[0]+2000,dd->time[1],dd->time[2]);
-                    f_printf(fp,"%d:%d:%d\t",dd->time[3],dd->time[4],dd->time[5]);
-                    f_printf(fp,"%d.%d\t",(dd->Data1)/10,(dd->Data1)%10);
-                    f_printf(fp,"%d.%d\r\n",(dd->Data2)/10,(dd->Data2)%10);
+//                    f_printf(fp,"%d-%d-%d\t",dd->time[0]+2000,dd->time[1],dd->time[2]);
+//                    f_printf(fp,"%d:%d:%d\t",dd->time[3],dd->time[4],dd->time[5]);
+//                    f_printf(fp,"%d.%d\t",(dd->Data1)/10,(dd->Data1)%10);
+//                    f_printf(fp,"%d.%d\r\n",(dd->Data2)/10,(dd->Data2)%10);
+                    sprintf(str,"%d-%d-%d\t%d:%d:%d\t%d.%d\t%d.%d\r\n",dd->time[0]+2000,dd->time[1],dd->time[2],dd->time[3],dd->time[4],dd->time[5],(dd->Data1)/10,(dd->Data1)%10,(dd->Data2)/10,(dd->Data2)%10);
+                    f_write(fp,str,strlen(str),&wbt);
                     f_close(fp);
                 }
             }
         }
 //        f_mount(0,"0:",1);
 //        free(fs);
+        free(str);
         free(fp);
         free(fno);
     }
