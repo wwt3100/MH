@@ -156,7 +156,7 @@ uint8_t Server_Process()
                     {
                         dev=0;
                         stat=e_Stat_Sampling;
-                        timer_init(&SamplingIntervalTimer,_gc.SamplingInterval*60000-1); //设置采样间隔
+                        timer_init(&SamplingIntervalTimer,_gc.SamplingInterval*60000-500); //设置采样间隔
                         
                     }
 //                }
