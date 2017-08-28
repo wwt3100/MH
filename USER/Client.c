@@ -518,10 +518,24 @@ uint8_t Client_Receive()
             case 0x72:
                 Client_Rx72Tx73(Verify); //数据删除
                 break;
-            case 0xCC:                   //重新刷序列号
+            case 0xCC:                   //重新刷序列号 
                 if(Verify==1 && *(u1mbuf->pData+11)==0x55)
                 {
                     STMFLASH_Write((uint32_t)MHID,(uint16_t*)(u1mbuf->pData+12),10);
+                }
+                else if(Verify==1 && *(u1mbuf->pData+11)==0x66)  //恢复出厂设置
+                {
+                    memset((uint8_t*)&_gc,0,sizeof(_GlobalConfig));
+                    _gc.OverLimitInterval=1;
+                    _gc.AlarmIntervalTime=1;
+                    _gc.OfflineAlarmInterval=5;
+                    _gc.OverLimitONOFF=1;
+                    _gc.AlarmONOFF=1;
+                    _gc.OfflineAlarmONOFF=1;
+                    _gc.SMSAlarmNum=0;
+                    _gc.SamplingInterval=1;
+                    _gc.MonitorDeviceNum=0;
+                    STMFLASH_Write((uint32_t)&c_gc,(uint16_t*)&_gc,sizeof(_GlobalConfig));
                 }
                 break;
             default:

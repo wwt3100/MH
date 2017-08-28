@@ -87,9 +87,8 @@ uint8_t Server_Process()
                 //if(strcmp(((cDc[dev]).ID),"HS500BS657"))  //for test
                 if(memcmp(_Dd[dev].ID,(cDc[dev].ID),10)==0) //接收采集数据的信息
                 {
-                    //SaveData2RecodeFile(&cDc[device]);
-                    SaveData2RecodeFile(&_Dd[dev]); 
-                    SaveData2TempFile(&_Dd[dev]);
+//                    SaveData2RecodeFile(&_Dd[dev]); 
+//                    SaveData2TempFile(&_Dd[dev]);
                     
                     _Dd[dev].OfflineAlarmTimer=0; 
                     
@@ -111,11 +110,11 @@ uint8_t Server_Process()
                     {
                         _Dd[dev].Data2AlarmTimer=0;
                     }
-//                    if(timer_check((_Dd[dev].Data1AlarmTimer)) || timer_check((_Dd[dev].Data2AlarmTimer)) || MustSave==1)  //超限 保存时间和采集时间一样
-//                    {
-//                        SaveData2RecodeFile(&_Dd[dev]); 
-//                        SaveData2TempFile(&_Dd[dev]);
-//                    }
+                    if((_Dd[dev].Data1AlarmTimer+_Dd[dev].Data2AlarmTimer!=0)||(systmtime.tm_min%5==0))  //超限 保存时间和采集时间一样
+                    {
+                        SaveData2RecodeFile(&_Dd[dev]); 
+                        SaveData2TempFile(&_Dd[dev]);
+                    }
                     dev++;
                     resend=0;
                     stat=e_Stat_Sampling;

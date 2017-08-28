@@ -43,7 +43,7 @@ const _GlobalConfig c_gc __attribute__((at(0x08038000)))={
 FATFS *fs;
 const _HardwareInfo _hi __attribute__((at(0x08001000)))={0x80000000,0xC000000,0xFEDCBA98};
 const _DeviceConfig cDc[255] __attribute__((at(0x08040000)))={0};
-const char MHID[] __attribute__((at(0x08039000)))={"MH6001A202"};
+const char MHID[] __attribute__((at(0x08039000)))={"MH6001A209"};
 _DeviceData _Dd[255]={0};
 extern uint8_t *SMSAlarmMessage;
 extern __mbuf *u1mbuf,*u2mbuf,*u3mbuf,*gmbuf;
@@ -114,6 +114,7 @@ static void gpio_init(void)
 //    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 //    NVIC_Init(&NVIC_InitStructure);
 }
+//FIL *logfile;
 uint32_t PowerDownTimer=0;
 uint32_t StartUptimer=0;
 int main(void)
@@ -128,13 +129,12 @@ int main(void)
     //_gc.RetryInterval=11;
     #ifdef _DEBUG
         DBGMCU_Config(DBGMCU_IWDG_STOP, ENABLE);  
-    #else
+    #endif
     IWDG_WriteAccessCmd(IWDG_WriteAccess_Enable);
     IWDG_SetPrescaler(IWDG_Prescaler_32);
     IWDG_SetReload(0xFFF); //2s 左右
     IWDG_ReloadCounter();
     IWDG_Enable();
-    #endif
     if(RCC_GetFlagStatus(RCC_FLAG_IWDGRST)==SET) //狗复位不提示
     {
         timer_init(&StartUptimer,60000);
@@ -150,7 +150,8 @@ int main(void)
     USART2_Init(9600);	 	//串口初始化为115200
     USART3_Init(19200);
 	SD_Init();
-    
+    //logfile=malloc(sizeof(FIL));
+    //f_mount(fs,"0:",0);
 //    if(SD_CardIsInserted())
 //    {
 //        
@@ -180,7 +181,7 @@ int main(void)
 //    }
     //timer_init(&Led3Timer,500);
     LED2(Bit_SET);
-
+    //f_open(logfile,"LogFile.log",FA_OPEN_APPEND | FA_WRITE);
     
 	while(1)
 	{
@@ -240,7 +241,6 @@ int main(void)
                 LED1(Bit_RESET);
                 j=0;
             }
-                
         }
         if(c_gc.MonitorDeviceNum>0 && GPIO_ReadInputDataBit(GPIOB,GPIO_Pin_15)==RESET &&NotConfiging==1) //没有仪器不采集,停电不采集
         {
@@ -281,7 +281,8 @@ int main(void)
             (l==0)?(l=1):(l=0);
             LED1(l);
         }
-        
+        //f_printf(logfile,"%d\r\n",g_tick_1ms);
+        //f_sync(logfile);
 	} 
     free(fs);
 }

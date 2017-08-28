@@ -37,7 +37,7 @@ void SaveData2RecodeFile(_DeviceData *dd)
 //                    strcpy(fno.fname,filename);
 //                    f_close(&fp);
 //                }
-                fres=f_open(fp,filename,FA_OPEN_APPEND | FA_WRITE | FA_READ);   //打开文件,如果不存在则新建
+                fres=f_open(fp,filename,FA_OPEN_APPEND | FA_WRITE);// | FA_READ);   //打开文件,如果不存在则新建
                 if(fres==FR_OK)
                 {
 //                    f_printf(fp,"%d-%d-%d\t",dd->time[0]+2000,dd->time[1],dd->time[2]);
@@ -127,7 +127,7 @@ void SaveData2TempFile(_DeviceData *dd)
                 fres=f_mount(fs, "0:", 0);
                 if(fres==FR_OK)
                 {
-                      fres=f_open(&sfp,".Tempdata",FA_OPEN_APPEND | FA_WRITE | FA_READ);
+                      fres=f_open(&sfp,".Tempdata",FA_OPEN_APPEND | FA_WRITE);// | FA_READ);
                       if(fres==FR_OK)
                       {
                           SDStat++;
