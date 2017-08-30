@@ -516,7 +516,15 @@ uint8_t Client_Receive()
                 Client_Rx80Tx81(Verify); //报警记录下载
                 break;
             case 0x72:
-                Client_Rx72Tx73(Verify); //数据删除
+                if(*(u1mbuf->pData+11)==0x01)
+                {
+                    hstat.ClientStat=CST_ClientHasData;
+                    return ret;
+                }
+                else
+                {
+                    Client_Rx72Tx73(Verify); //数据删除
+                }
                 break;
             case 0xCC:                   //重新刷序列号 
                 if(Verify==1 && *(u1mbuf->pData+11)==0x55)
@@ -542,17 +550,13 @@ uint8_t Client_Receive()
                 break;
         }
     }
-//    else if(u1mbuf->pData[0]==0)  //序列号为0 重新写序列号
-//    {
-//        switch(*(u1mbuf->pData+10))
-//        {
-//            
-//            default:
-//                break;
-//        }
-//    }
     else //发给其他设备的信息
     {
+        if(*(u1mbuf->pData+10)==0x5B)
+        {
+            memset(_Dd,0,sizeof(_DeviceData)*_gc.MonitorDeviceNum);
+            AlarmOn=0;
+        }
         hstat.ClientStat=CST_ClientHasData;
         return ret;
     }

@@ -211,12 +211,12 @@ void USART3_IRQHandler (void)
             tail<<=8;
             tail|=rtempdata;
             *(buf->pData+lenght++)=rtempdata;
-            if(tail==0x297d7e04 || lenght>252)
+            if(tail==0x297d7e04 || lenght>2044)
             {
                 head=rtempdata;
                 buf->usable=1;
                 buf->datasize=lenght;
-                buf->pNext=(__mbuf*)CreateMbuf(252);
+                buf->pNext=(__mbuf*)CreateMbuf(2044);
                 tail=0;
                 lenght=0;
             }    

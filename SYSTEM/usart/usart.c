@@ -224,7 +224,7 @@ void USART3_Init(uint32_t band)
    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
    NVIC_Init(&NVIC_InitStructure);
     
-    u3mbuf=CreateMbuf(252);
+   u3mbuf=CreateMbuf(2044);
 }
 void Usart3_SendData(uint8_t *buffer,uint16_t len)
 {  
