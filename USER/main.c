@@ -135,9 +135,9 @@ int main(void)
     IWDG_SetReload(0xFFF); //2s 左右
     IWDG_ReloadCounter();
     IWDG_Enable();
-    if(RCC_GetFlagStatus(RCC_FLAG_IWDGRST)==SET) //狗复位不提示
+    if(RCC_GetFlagStatus(RCC_FLAG_IWDGRST)!=SET) //狗复位不提示
     {
-        timer_init(&StartUptimer,60000);
+        timer_init(&StartUptimer,120000);
     }
     fs=malloc(1020);	    
     SysTick_Init();
