@@ -197,51 +197,77 @@ uint8_t SMSAlarm(uint16_t type,uint16_t dev,uint8_t op)
 }
 uint32_t AlarmOn=0;
 static uint32_t AlarmBellTimer=0;
+uint32_t AlarmTimer=0;
 uint8_t SMSAlarm_SetBuf()
 {
     static uint8_t a=0;
     static uint8_t dev=0;
+    static uint32_t  hasAlarm=0;
+    if(dev==0) //当首台仪器的时候输出报警
+    {
+        AlarmOn=hasAlarm;
+        hasAlarm=0;
+    }
     if(_gc.OfflineAlarmONOFF)
     {
-        if(timer_check((_Dd[dev].OfflineAlarmTimer)) && _Dd[dev].Alram[0]<_gc.SMSAlarmNum+1)
+        if(_Dd[dev].Alram[0]!=0 && _Dd[dev].OfflineAlarmTimer==0)
+        {
+            timer_init_sp(&(_Dd[dev].OfflineAlarmTimer),_gc.OfflineAlarmInterval*60000);
+        }
+        else if(_Dd[dev].Alram[0]==0 && _Dd[dev].OfflineAlarmTimer!=0)
+        {
+            _Dd[dev].OfflineAlarmTimer=0;
+            SMSAlarm(eAlarmType_Online,dev,0);  // 设备上线恢复
+        }
+        if(timer_check((_Dd[dev].OfflineAlarmTimer)) && _Dd[dev].Alram[0]<=_gc.SMSAlarmNum+1)
         {
             timer_init_sp(&(_Dd[dev].OfflineAlarmTimer),_gc.OfflineAlarmInterval*60000);
             _Dd[dev].Alram[0]+=1;
             SMSAlarm(eAlarmType_Offline,dev,0); //下线报警
-            if(_Dd[dev].Alram[0]==1)
-                AlarmOn++;
         }
-        if(_Dd[dev].Alram[0]>0 && _Dd[dev].OfflineAlarmTimer==0)
-        {
-            _Dd[dev].Alram[0]=0;
-            SMSAlarm(eAlarmType_Online,dev,0);  // 设备上线恢复
-            AlarmOn--;
-        }
+        hasAlarm+=_Dd[dev].Alram[0];
     }
     if(_gc.OverLimitONOFF)
     {
-        if(timer_check((_Dd[dev].Data1AlarmTimer)) && _Dd[dev].Alram[1]<_gc.SMSAlarmNum+1)
+        if(_Dd[dev].Alram[1]!=0 && _Dd[dev].Data1AlarmTimer==0)
         {
-            timer_init_sp(&_Dd[dev].Data1AlarmTimer,_gc.AlarmIntervalTime*60000);
-            if(_Dd[dev].Data1>cDc[dev].Data1Max || _Dd[dev].Data1<cDc[dev].Data1Min)  //消除偶发性不超限报警的情况
+            timer_init_sp(&(_Dd[dev].Data1AlarmTimer),_gc.OverLimitInterval*60000);
+        }
+        else if (_Dd[dev].Alram[1]==0 && _Dd[dev].Data1AlarmTimer!=0)
+        {
+            _Dd[dev].Data1AlarmTimer=0;
+            SMSAlarm(eAlarmType_OverLimitRecovery,dev,1);  //超限报警 解除
+        }
+        if(timer_check((_Dd[dev].Data1AlarmTimer)) && _Dd[dev].Alram[1]<=_gc.SMSAlarmNum+1)
+        {
+            timer_init_sp(&(_Dd[dev].Data1AlarmTimer),_gc.OverLimitInterval*60000);
+            _Dd[dev].Alram[1]+=1;
+            SMSAlarm(eAlarmType_OverLimit,dev,1); //超限报警
+        }
+        hasAlarm+=_Dd[dev].Alram[1];
+        
+        if(_Dd[dev].Alram[2]!=0 && _Dd[dev].Data2AlarmTimer==0)
+        {
+            timer_init_sp(&(_Dd[dev].Data2AlarmTimer),_gc.OverLimitInterval*60000);
+        }
+        else if (_Dd[dev].Alram[2]==0 && _Dd[dev].Data2AlarmTimer!=0)
+        {
+            _Dd[dev].Data2AlarmTimer=0;
+            switch(_Dd[dev].ID[11])
             {
-                _Dd[dev].Alram[1]+=1; 
-                SMSAlarm(eAlarmType_OverLimit,dev,1);  //超限报警
-                if(_Dd[dev].Alram[1]==1)
-                {
-                    AlarmOn++;
-                }
+                case 1:                    //温湿度
+                    SMSAlarm(eAlarmType_OverLimitRecovery,dev,2); //超限报警 解除
+                    break;
+                case 3:                     //双温
+                    SMSAlarm(eAlarmType_OverLimitRecovery,dev,1); //超限报警 解除
+                    break;
+                default:
+                    break;
             }
         }
-        if(_Dd[dev].Alram[1]>0 && _Dd[dev].Data1AlarmTimer==0) //使用nolimit timer可能为零  fixed:初始化使用_sp函数
+        if(timer_check((_Dd[dev].Data2AlarmTimer)) && _Dd[dev].Alram[2]<=_gc.SMSAlarmNum+1)
         {
-            _Dd[dev].Alram[1]=0;
-            AlarmOn--;
-            SMSAlarm(eAlarmType_OverLimitRecovery,dev,1); //超限报警 解除
-        }
-        if(timer_check((_Dd[dev].Data2AlarmTimer)) && _Dd[dev].Alram[2]<_gc.SMSAlarmNum+1)
-        {
-            timer_init_sp(&_Dd[dev].Data2AlarmTimer,_gc.AlarmIntervalTime*60000);
+            timer_init_sp(&(_Dd[dev].Data2AlarmTimer),_gc.OverLimitInterval*60000);
             if(_Dd[dev].Data2>cDc[dev].Data2Max || _Dd[dev].Data2<cDc[dev].Data2Min)
             {
                 switch(_Dd[dev].ID[11])
@@ -249,36 +275,32 @@ uint8_t SMSAlarm_SetBuf()
                     case 1:                    //温湿度
                         _Dd[dev].Alram[2]+=1; 
                         SMSAlarm(eAlarmType_OverLimit,dev,2); //超限报警
-                        if(_Dd[dev].Alram[2]==1)
-                        {
-                            AlarmOn++;
-                        }
                         break;
                     case 3:                     //双温
                         _Dd[dev].Alram[2]+=1; 
                         SMSAlarm(eAlarmType_OverLimit,dev,1); //超限报警
-                        if(_Dd[dev].Alram[2]==1)
-                        {
-                            AlarmOn++;
-                        }
                         break;
                     default:
                         break;
                 }
             }
         }
-        if(_Dd[dev].Alram[2]>0 && _Dd[dev].Data2AlarmTimer==0)
-        {
-            _Dd[dev].Alram[2]=0;
-            AlarmOn--;
-            SMSAlarm(eAlarmType_OverLimitRecovery,dev,2); //超限报警 解除
-        }
+        hasAlarm+=_Dd[dev].Alram[2];
     }
-    if(_gc.AlarmONOFF==1 && AlarmOn>0)
+    if(_gc.AlarmONOFF)
     {
-        //LED3(1);
-        //声光报警
-        if(AlarmBellTimer==0)
+        if(AlarmOn>0 && AlarmTimer==0)
+        {
+            timer_init_sp(&AlarmTimer,_gc.AlarmIntervalTime*60000);
+        }
+        else if(AlarmOn==0 && AlarmTimer!=0)
+        {
+            LED3(Bit_RESET);
+            AlarmBellTimer=0;
+            AlarmTimer=0;
+            GPIO_WriteBit(GPIOA,GPIO_Pin_4,Bit_RESET);
+        }
+        if(timer_check(AlarmTimer) && AlarmBellTimer==0)
         {
             AlarmBellTimer=1;
         }
@@ -287,6 +309,7 @@ uint8_t SMSAlarm_SetBuf()
     {
         LED3(Bit_RESET);
         AlarmBellTimer=0;
+        AlarmTimer=0;
         GPIO_WriteBit(GPIOA,GPIO_Pin_4,Bit_RESET);
     }
     
