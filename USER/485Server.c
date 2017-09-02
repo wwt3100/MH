@@ -59,9 +59,9 @@ uint8_t Server_Process()
                 if(resend>=3)  //如果发送2次没有收到回复
                 {
                     
-                    if(_Dd[dev].Alram[0]==0)
+                    if(_Dd[dev].Alram[0]==0 && _Dd[dev].OfflineAlarmTimer==0)
                     {
-                        _Dd[dev].Alram[0]=1;
+                        timer_init_sp(&(_Dd[dev].OfflineAlarmTimer),_gc.OfflineAlarmInterval*60000);
                     }
                     dev++;
                     resend=0;
@@ -87,45 +87,31 @@ uint8_t Server_Process()
                 //if(strcmp(((cDc[dev]).ID),"HS500BS657"))  //for test
                 if(memcmp(_Dd[dev].ID,(cDc[dev].ID),10)==0) //接收采集数据的信息
                 {
-                    //SaveData2RecodeFile(&_Dd[dev]); 
-                    SaveData2TempFile(&_Dd[dev]);
-                    if(_Dd[dev].Alram[0]==1)
-                    {
-                        _Dd[dev].OfflineAlarmTimer=0;
-                    }
-                    _Dd[dev].Alram[0]=0;
+
+                    SaveData2RecodeFile(&_Dd[dev]); 
+//                    SaveData2TempFile(&_Dd[dev]);
+                    
+                    _Dd[dev].OfflineAlarmTimer=0; 
                     
                     if(_Dd[dev].Data1>cDc[dev].Data1Max || _Dd[dev].Data1<cDc[dev].Data1Min)
                     {
-                        if(_Dd[dev].Alram[1]==0)
-                        {
-                            _Dd[dev].Alram[1]=1;
-                        }
+                        if(_Dd[dev].Data1AlarmTimer==0)
+                            timer_init_sp(&_Dd[dev].Data1AlarmTimer,_gc.OverLimitInterval*60000+2000);
                     }
                     else
                     {
-                        if(_Dd[dev].Alram[1]==1)
-                        {
-                             _Dd[dev].Data1AlarmTimer=0;
-                        }
-                        _Dd[dev].Alram[1]=0;
+                        _Dd[dev].Data1AlarmTimer=0;
                     }
                     if(_Dd[dev].Data2>cDc[dev].Data2Max || _Dd[dev].Data2<cDc[dev].Data2Min)
                     {
-                        if(_Dd[dev].Alram[2]==0)
-                        {
-                            _Dd[dev].Alram[2]=1;
-                        }
+                        if(_Dd[dev].Data2AlarmTimer==0)
+                            timer_init_sp(&_Dd[dev].Data2AlarmTimer,_gc.OverLimitInterval*60000+2000);
                     }
                     else
                     {
-                        if(_Dd[dev].Alram[2]==1)
-                        {
-                             _Dd[dev].Data2AlarmTimer=0;
-                        }
-                        _Dd[dev].Alram[2]=0;
+                        _Dd[dev].Data2AlarmTimer=0;
                     }
-                    if((_Dd[dev].Data1AlarmTimer+_Dd[dev].Data2AlarmTimer!=0)||(systmtime.tm_min%2==0))  //超限 保存时间和采集时间一样
+                    if((_Dd[dev].Data1AlarmTimer+_Dd[dev].Data2AlarmTimer!=0)||(systmtime.tm_min%5==0))  //超限 保存时间和采集时间一样
                     {
                         SaveData2RecodeFile(&_Dd[dev]); 
                         //SaveData2TempFile(&_Dd[dev]);
@@ -162,18 +148,13 @@ uint8_t Server_Process()
             }
             else
             {
-//                if(timer_check_nolimit(OneSecTimer))
-//                {
-//                    timer_init(&OneSecTimer,100);
-//                    to_tm(RTC_GetCounter(),&systmtime);
-                    if(timer_check(SamplingIntervalTimer)&&(RTC_GetCounter()%60==0))
-                    {
-                        dev=0;
-                        stat=e_Stat_Sampling;
-                        timer_init(&SamplingIntervalTimer,_gc.SamplingInterval*60000-500); //设置采样间隔
-                        
-                    }
-//                }
+                if(timer_check(SamplingIntervalTimer)&&(RTC_GetCounter()%60==0))
+                {
+                    dev=0;
+                    stat=e_Stat_Sampling;
+                    timer_init(&SamplingIntervalTimer,_gc.SamplingInterval*60000-500); //设置采样间隔
+                    
+                }
             }
             break;
         case e_Stat_PCMessage:
