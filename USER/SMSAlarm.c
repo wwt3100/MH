@@ -231,7 +231,7 @@ uint8_t SMSAlarm_SetBuf()
     {
         if(timer_check((_Dd[dev].Data1AlarmTimer)) && _Dd[dev].Alram[1]<_gc.SMSAlarmNum+1)
         {
-            timer_init_sp(&_Dd[dev].Data1AlarmTimer,_gc.AlarmIntervalTime*60000);
+            timer_init_sp(&_Dd[dev].Data1AlarmTimer,_gc.OverLimitInterval*60000);
             if(_Dd[dev].Data1>cDc[dev].Data1Max || _Dd[dev].Data1<cDc[dev].Data1Min)  //消除偶发性不超限报警的情况
             {
                 _Dd[dev].Alram[1]+=1; 
@@ -247,7 +247,7 @@ uint8_t SMSAlarm_SetBuf()
         
         if(timer_check((_Dd[dev].Data2AlarmTimer)) && _Dd[dev].Alram[2]<_gc.SMSAlarmNum+1)
         {
-            timer_init_sp(&_Dd[dev].Data2AlarmTimer,_gc.AlarmIntervalTime*60000);
+            timer_init_sp(&_Dd[dev].Data2AlarmTimer,_gc.OverLimitInterval*60000);
             if(_Dd[dev].Data2>cDc[dev].Data2Max || _Dd[dev].Data2<cDc[dev].Data2Min)
             {
                 switch(_Dd[dev].ID[11])
