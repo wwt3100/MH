@@ -89,7 +89,10 @@ uint8_t Server_Process()
                 {
                     //SaveData2RecodeFile(&_Dd[dev]); 
                     SaveData2TempFile(&_Dd[dev]);
-                    
+                    if(_Dd[dev].Alram[0]==1)
+                    {
+                        _Dd[dev].OfflineAlarmTimer=0;
+                    }
                     _Dd[dev].Alram[0]=0;
                     
                     if(_Dd[dev].Data1>cDc[dev].Data1Max || _Dd[dev].Data1<cDc[dev].Data1Min)
@@ -101,6 +104,10 @@ uint8_t Server_Process()
                     }
                     else
                     {
+                        if(_Dd[dev].Alram[1]==1)
+                        {
+                             _Dd[dev].Data1AlarmTimer=0;
+                        }
                         _Dd[dev].Alram[1]=0;
                     }
                     if(_Dd[dev].Data2>cDc[dev].Data2Max || _Dd[dev].Data2<cDc[dev].Data2Min)
@@ -112,6 +119,10 @@ uint8_t Server_Process()
                     }
                     else
                     {
+                        if(_Dd[dev].Alram[2]==1)
+                        {
+                             _Dd[dev].Data2AlarmTimer=0;
+                        }
                         _Dd[dev].Alram[2]=0;
                     }
                     if((_Dd[dev].Data1AlarmTimer+_Dd[dev].Data2AlarmTimer!=0)||(systmtime.tm_min%2==0))  //超限 保存时间和采集时间一样
