@@ -9,7 +9,7 @@ extern __mbuf *u1mbuf,*u2mbuf,*u3mbuf,*gmbuf;
 char* SMSAlarm_GetLine(void);
 void ASCII2UNICODE(char* str);
 uint8_t *SMSAlarmMessage=0;
-
+extern const _GlobalConfig c_gc;
 extern volatile _GlobalConfig _gc;
 extern volatile _HostStat hstat;
 
@@ -203,6 +203,10 @@ uint8_t SMSAlarm_SetBuf()
     static uint8_t a=0;
     static uint8_t dev=0;
     static uint32_t  hasAlarm=0;
+    if(c_gc.MonitorDeviceNum==0)
+    {
+        return 1;
+    }
     if(dev==0) //当首台仪器的时候输出报警
     {
         AlarmOn=hasAlarm;
