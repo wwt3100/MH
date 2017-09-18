@@ -88,8 +88,8 @@ uint8_t Server_Process()
                 if(memcmp(_Dd[dev].ID,(cDc[dev].ID),10)==0) //接收采集数据的信息
                 {
 
-                    SaveData2RecodeFile(&_Dd[dev]); 
-//                    SaveData2TempFile(&_Dd[dev]);
+//                    SaveData2RecodeFile(&_Dd[dev]); 
+                    SaveData2TempFile(&_Dd[dev]);
                     
                     _Dd[dev].OfflineAlarmTimer=0; 
                     
