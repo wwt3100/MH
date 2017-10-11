@@ -43,7 +43,7 @@ const _GlobalConfig c_gc __attribute__((at(0x08038000)))={
 FATFS *fs;
 const _HardwareInfo _hi __attribute__((at(0x08001000)))={0x80000000,0xC000000,0xFEDCBA98};
 const _DeviceConfig cDc[255] __attribute__((at(0x08040000)))={0};
-const char MHID[] __attribute__((at(0x08039000)))={"MH6001A204"};
+const char MHID[] __attribute__((at(0x08039000)))={"MH6001A000"};
 _DeviceData _Dd[255]={0};
 extern uint8_t *SMSAlarmMessage;
 extern __mbuf *u1mbuf,*u2mbuf,*u3mbuf,*gmbuf;
@@ -67,6 +67,7 @@ static void gpio_init(void)
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOE, ENABLE);
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOF, ENABLE);
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOG, ENABLE);
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);
     
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8;				 
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP; 		 //ÍÆÍìÊä³ö

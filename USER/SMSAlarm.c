@@ -45,7 +45,7 @@ void SaveData2AlarmFile(uint8_t yn)
                     f_write(fp,&yn,1,&wbt);  //³É¹¦Ê§°Ü
                     f_write(fp,&abuf->AlarmType,1,&wbt);
                     f_write(fp,abuf->PhoneNumber,16,&wbt);
-                    if(abuf->AlarmType == eAlarmType_PowerOff)
+                    if(abuf->AlarmType == eAlarmType_PowerOff || abuf->AlarmType == eAlarmType_PowerOn)
                     {
                         f_write(fp,MHID,10,&wbt);
                         to_tm(RTC_GetCounter(), &systmtime);
@@ -134,6 +134,7 @@ uint8_t SMSAlarm(uint16_t type,uint16_t dev,uint8_t op)
             }
             break;
         case eAlarmType_PowerOff:
+        case eAlarmType_PowerOn:  
             while(buf->pNext!=NULL)
             {
                 buf=buf->pNext;
@@ -159,32 +160,7 @@ uint8_t SMSAlarm(uint16_t type,uint16_t dev,uint8_t op)
                 }
             }
             break;
-        case eAlarmType_PowerOn:   
-            while(buf->pNext!=NULL)
-            {
-                buf=buf->pNext;
-            }
-            for(i=0;i<5;i++)
-            {
-                if(_gc.PhoneNumber[i][0]!=0)
-                {
-                    buf->AlarmStat=eAlarmStat_Waiting;
-                    buf->AlarmType=type;
-                    buf->Option=op;
-                    memcpy(buf->PhoneNumber,(uint8_t*)_gc.PhoneNumber[i],16);
-                    to_tm(RTC_GetCounter(),&systmtime);
-                    buf->time[0]=systmtime.tm_year-2000;
-                    buf->time[1]=systmtime.tm_mon ;
-                    buf->time[2]=systmtime.tm_mday;
-                    buf->time[3]=systmtime.tm_hour;
-                    buf->time[4]=systmtime.tm_min ;
-                    buf->time[5]=systmtime.tm_sec ;
-                    buf->usable=1;
-                    buf->pNext=(__abuf*)CreateAlarmbuf(124);
-                    buf=buf->pNext;
-                }
-            }
-            break;
+         
         default:
             return 1;
     }
