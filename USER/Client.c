@@ -466,6 +466,38 @@ static void Client_Rx72Tx73(uint8_t Veri)
     Usart1_SendData(sendbuf,23);
 }
 
+///////////////////////////////////////////////////////////////
+// 读取固件信息 Check OK
+//
+extern const _HardwareInfo _hi;
+static void Client_RxCATxCB(uint8_t Veri)
+{
+    uint16_t i=0;
+    uint8_t Verify=0;
+    uint8_t *sendbuf;
+    uint32_t num;
+    FSIZE_t size;
+    if(Veri==0)
+        return;
+    sendbuf=malloc(252);
+    if(sendbuf==NULL)
+        return ;
+    memset(sendbuf,0,252);
+    memcpy(sendbuf,&WLP_HEAD,4);
+    memcpy(sendbuf+4,MHID,10);
+    sendbuf[14]=0xCB;
+    sendbuf[15]=0x01;
+    memcpy(sendbuf+16,&_hi,12);
+    for(i=4;i<16+12;i++)   //i=0  =>  i=4
+    {
+        Verify = Verify ^ *(sendbuf+i);
+    }
+    sendbuf[16+12]=Verify;
+    memcpy(sendbuf+16+13,&WLP_TAIL,4);
+    Usart1_SendData(sendbuf,16+13+4);
+    free(sendbuf);
+}
+
 uint8_t Client_Receive()
 {
     uint16_t i=0;
@@ -525,6 +557,9 @@ uint8_t Client_Receive()
                 {
                     Client_Rx72Tx73(Verify); //数据删除
                 }
+                break;
+            case 0xCA:
+                Client_RxCATxCB(Verify);
                 break;
             case 0xCC:                   //重新刷序列号 
                 if(Verify==1 && *(u1mbuf->pData+11)==0x55)

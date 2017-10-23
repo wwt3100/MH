@@ -41,7 +41,7 @@ const _GlobalConfig c_gc __attribute__((at(0x08038000)))={
 };
 
 FATFS *fs;
-const _HardwareInfo _hi __attribute__((at(0x08001000)))={0x80000000,0xC000000,0xFEDCBA98};
+const _HardwareInfo _hi __attribute__((at(0x08001000)))={0x80000301,0xC00000C,0xFEDCBA98};
 const _DeviceConfig cDc[255] __attribute__((at(0x08040000)))={0};
 const char MHID[] __attribute__((at(0x08039000)))={"MH6001A000"};
 _DeviceData _Dd[255]={0};
