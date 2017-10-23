@@ -160,7 +160,6 @@ uint8_t SMSAlarm(uint16_t type,uint16_t dev,uint8_t op)
                 }
             }
             break;
-         
         default:
             return 1;
     }
@@ -228,15 +227,13 @@ uint8_t SMSAlarm_SetBuf()
             {
                 switch(_Dd[dev].ID[11])
                 {
-                    case 1:                    //温湿度
-                        _Dd[dev].Alram[2]+=1; 
-                        SMSAlarm(eAlarmType_OverLimit,dev,2); //超限报警
-                        break;
                     case 3:                     //双温
                         _Dd[dev].Alram[2]+=1; 
                         SMSAlarm(eAlarmType_OverLimit,dev,1); //超限报警
                         break;
-                    default:
+                    default: //温湿度
+                        _Dd[dev].Alram[2]+=1; 
+                        SMSAlarm(eAlarmType_OverLimit,dev,2); //超限报警
                         break;
                 }
             }
@@ -246,13 +243,11 @@ uint8_t SMSAlarm_SetBuf()
             _Dd[dev].Alram[2]=0;
             switch(_Dd[dev].ID[11])
             {
-                case 1:                    //温湿度
-                    SMSAlarm(eAlarmType_OverLimitRecovery,dev,2); //超限报警 解除
-                    break;
                 case 3:                     //双温
                     SMSAlarm(eAlarmType_OverLimitRecovery,dev,1); //超限报警 解除
                     break;
-                default:
+                default:                    //温湿度
+                    SMSAlarm(eAlarmType_OverLimitRecovery,dev,2); //超限报警 解除
                     break;
             }
         }
