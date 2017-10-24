@@ -291,6 +291,7 @@ void SMSAlarm_DoWork()
 {
     __abuf *tb;
     uint8_t *sendbuf=0;
+    char mMHID[12]={0};
     char *str;//*str1;
     if(GSMWorkStat!=eGSMStat_Ready)
     {
@@ -308,6 +309,7 @@ void SMSAlarm_DoWork()
     
 //    str1=malloc(124);
 //    memset(str1,0,124);
+    memcpy(mMHID,MHID,10);
     switch(abuf->AlarmStat)
     {
         case eAlarmStat_Waiting:
@@ -357,15 +359,15 @@ void SMSAlarm_DoWork()
                     strcat((char*)str," 设备上线恢复正常!");
                     break;
                 case eAlarmType_PowerOff:
-                    strcat((char*)str,MHID);
+                    strcat((char*)str,mMHID);
                     strcat((char*)str," HE2435管理主机断电!!!");
                     break;
                 case eAlarmType_PowerOn:
-                    strcat((char*)str,MHID);
+                    strcat((char*)str,mMHID);
                     strcat((char*)str," HE2435管理主机恢复供电!!!");
                     break;
                 case eAlarmType_GoodStat:
-                    strcat((char*)str,MHID);
+                    strcat((char*)str,mMHID);
                     strcat((char*)str," HE2435管理主机正在稳定运行!!!");
                     break;
                 default:

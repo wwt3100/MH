@@ -562,9 +562,11 @@ uint8_t Client_Receive()
                 Client_RxCATxCB(Verify);
                 break;
             case 0xCC:                   //重新刷序列号 
+                LED3(1);
                 if(Verify==1 && *(u1mbuf->pData+11)==0x55)
                 {
                     STMFLASH_Write((uint32_t)MHID,(uint16_t*)(u1mbuf->pData+12),10);
+                    Delay_ms(300);
                 }
                 else if(Verify==1 && *(u1mbuf->pData+11)==0x66)  //恢复出厂设置
                 {
@@ -579,7 +581,9 @@ uint8_t Client_Receive()
                     _gc.SamplingInterval=1;
                     _gc.MonitorDeviceNum=0;
                     STMFLASH_Write((uint32_t)&c_gc,(uint16_t*)&_gc,sizeof(_GlobalConfig));
+                    Delay_ms(300);
                 }
+                LED3(0);
                 break;
             default:
                 break;
